@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { User } from "../Model/User";
+import { User } from "../model/User";
 
 const userSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters long"),
