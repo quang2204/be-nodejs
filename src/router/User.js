@@ -1,0 +1,10 @@
+import express from "express";
+import { GetUser, Login, Register } from "../controller/User";
+import { singin, singup, updateUser, DeleteUser} from "../controller/user-joi";
+const router = express.Router();
+router.post("/register", singup);
+router.get("/user", GetUser);
+router.post("/login", singin);
+router.patch("/user/:id", updateUser);
+router.delete("/user/:id", DeleteUser);
+export default router;
