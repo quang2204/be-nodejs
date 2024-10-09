@@ -62,7 +62,11 @@ export const singin = async (req, res) => {
     res.cookie("token", token, { httpOnly: true });
     return res.status(200).json({
       token,
-      user,
+      user:{
+        name: user.username,
+        email: user.email,
+        
+      },
       message: "Đăng Nhập Thành Công",
     });
   } catch (error) {

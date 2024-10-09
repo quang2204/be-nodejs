@@ -64,7 +64,9 @@ export const Login = async (req, res) => {
     if (!user) {
       return res.status(400).json("Không có tài khoản này");
     }
-    return res.status(200).json(user);
+    return res.status(200).json({
+      user,
+      message: "Đăng nhap thanh cong",});
   } catch (error) {
     const messagesPath = error.issues.map((issue) => ({
       path: issue.path,
