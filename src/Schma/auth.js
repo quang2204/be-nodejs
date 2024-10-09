@@ -29,6 +29,7 @@ export const reqSchma = Joi.object({
       "any.required": "Xác nhận mật khẩu không được để trống",
       "any.only": "Xác nhận mật khẩu không đúng"
     }),
+    role: Joi.string().valid('admin', 'user').default('user'),
 });
 export const loginSchma = Joi.object({
   email: Joi.string()
