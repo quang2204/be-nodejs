@@ -4,7 +4,7 @@ import { reqSchma, loginSchma } from "../Schma/auth";
 import jwt from "jsonwebtoken";
 export const singup = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password,role } = req.body;
     const { error } = reqSchma.validate(req.body, {
       abortEarly: false,
     });
@@ -27,7 +27,7 @@ export const singup = async (req, res) => {
       });
     }
     const hashedPassword = await hash.hash(password, 10);
-    await User.create({ username, email, password: hashedPassword });
+    await User.create({ username, email, password: hashedPassword, role });
     return res.status(201).json({ message: "User created successfully" });
   } catch (error) {
     return res.status(500).json({
