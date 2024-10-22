@@ -40,7 +40,22 @@ const GetProductDetails = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+const GetProductsCategory= async (req,res)=>{
 
+  try {
+
+    const { category } = req.params; 
+    const products = await Product.find({ caterori:category }); 
+    if (products.length === 0) {
+        return res.status(404).json({ message: 'Không tìm thấy sản phẩm nào trong danh mục này.' });
+    }
+
+    res.status(200).json(products); // Trả về danh sách sản phẩm
+} catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Lỗi server.' });
+}
+}
 const AddProduct = async (req, res) => {
   try {
     const data = await Product(req.body).save();
@@ -84,4 +99,5 @@ export {
   AddProduct,
   UpdateProduct,
   DeleteProduct,
+  GetProductsCategory
 };
