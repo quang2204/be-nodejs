@@ -13,8 +13,5 @@ app.use("/api", productRouter);
 app.use("/api", userRouter);
 app.use("/api", cateroryRouter);
 
-app.listen(8000, () => {
-  console.log("Server running on port 8000");
-});
-export const viteNodeApp = app;
-// export default app;
+// export const viteNodeApp = app;
+export default app;
