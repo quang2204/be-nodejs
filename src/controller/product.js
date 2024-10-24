@@ -17,7 +17,7 @@ const Pagination = async (req, res) => {
   try {
     const page = req.query.page || req.params.page || 1;
     const totalProduct = await Product.countDocuments();
-    const limit = req.query.limit || 15;
+    const limit = req.query.limit || 12;
     const skip = (page - 1) * limit;
     const data = await Product.find().skip(skip).limit(limit).where("_id");
     const toatalPages = Math.ceil(totalProduct / limit);
