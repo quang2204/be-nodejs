@@ -14,5 +14,5 @@ app.use("/api", userRouter);
 app.use("/api", cateroryRouter);
 app.use("/api", cartRouter);
 
-export const viteNodeApp = app;
-// export default app;
+// export const viteNodeApp = app;
+export default app;
