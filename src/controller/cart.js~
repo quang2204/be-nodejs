@@ -29,6 +29,8 @@ export const AddCart = async (req, res) => {
 export const GetCart = async (req, res) => {
   try {
     const { userid } = req.params;
+
+    // Tìm tất cả sản phẩm trong giỏ hàng của người dùng
     const cart = await Cart.find({ user: userid }).populate({
       path: "product",
       select: "name price imageUrl",
@@ -41,8 +43,8 @@ export const GetCart = async (req, res) => {
 };
 export  const DeleteCart = async (req, res) => {
   try {
-  const { id } = req.params;
-  await Cart.findOneAndDelete(id)
+  const { userid, productid } = req.params;
+  await Cart.findOneAndDelete({ user: userid, product: productid });
   return res.status(200).json({ message: "Xóa thanh cong" });
   } catch (error) {
     return res.status(500).json({ message: error.message });
