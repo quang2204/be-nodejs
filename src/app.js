@@ -13,6 +13,7 @@ connectDb();
 app.use("/api", productRouter);
 app.use("/api", userRouter);
 app.use("/api", cateroryRouter);
+app.use("/api", cartRouter);
 app.use("/api", voucher);
 
 // export const viteNodeApp = app;
