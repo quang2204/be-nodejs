@@ -1,6 +1,0 @@
-import express from "express";
-import {getAllVoucher} from "../controller/voucher";
-
-const router=express.Router();
-router.get("/vouchers",getAllVoucher);
-export default router
