@@ -1,8 +1,7 @@
 import express from "express";
 import {
   AddOrder,
-  DeleteOrder,
-  DetailOrder,
+  DeleteOrder, DetailOrder,
   GetOrder,
   UpdateOrder,
 } from "../controller/order";

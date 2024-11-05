@@ -39,22 +39,22 @@ export const GetCart = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
-export const DeleteCart = async (req, res) => {
+export  const DeleteCart = async (req, res) => {
   try {
-    const { id } = req.params;
-    await Cart.findOneAndDelete(id);
-    return res.status(200).json({ message: "Xóa thanh cong" });
+  const { id } = req.params;
+  await Cart.findOneAndDelete(id)
+  return res.status(200).json({ message: "Xóa thanh cong" });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
-};
+}
 export const UpdateCart = async (req, res) => {
   try {
     const { id } = req.params;
     const { quantity } = req.body;
-    const cart = await Cart.findByIdAndUpdate(id, { quantity }, { new: true });
-    return res.status(200).json({ message: "Cap nhat thanh cong" });
+  const cart=await Cart.findByIdAndUpdate(id, {quantity}, {new: true});
+    return res.status(200).json({message: "Cap nhat thanh cong" });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
-};
+}
