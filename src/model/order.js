@@ -38,5 +38,9 @@ const orderSchema = new mongoose.Schema({
     enum: ["Pending", "Shipped", "Delivered"],
     default: "Pending",
   },
+  voucher: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Voucher",
+  },
 });
 export const Order = mongoose.model("Order", orderSchema);
