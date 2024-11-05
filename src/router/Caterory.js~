@@ -1,7 +1,0 @@
-import express from "express";
-import { CreateCategory, GetAllCategory } from "../controller/Caterory";
-
-const router = express.Router();
-router.get("/categorys", GetAllCategory);
-router.post("/category", CreateCategory);
-export default router;
