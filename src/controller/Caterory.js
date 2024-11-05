@@ -4,7 +4,7 @@ export const GetAllCaterory = async (req, res) => {
     const data = await Caterory.find();
     return res.status(200).json(data);
   } catch (error) {
-    return res.status(200).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 export const CreateCaterory = async (req, res) => {
