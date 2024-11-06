@@ -33,8 +33,11 @@ export const GetCart = async (req, res) => {
       path: "product",
       select: "name price imageUrl",
     });
-
-    return res.status(200).json({ data: cart });
+    const total = cart.reduce(
+      (acc, item) => acc + item.quantity * item.product.price,
+      0,
+    );
+    return res.status(200).json({ data: cart, totalPrice: total });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
