@@ -42,10 +42,5 @@ const orderSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Voucher",
   },
-  payment: {
-    type: String,
-    enum: ["COD", "VNPAY", "MOMO"],
-    default: "COD",
-  },
 });
 export const Order = mongoose.model("Order", orderSchema);
