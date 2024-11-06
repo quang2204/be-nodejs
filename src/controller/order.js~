@@ -12,7 +12,7 @@ export const AddOrder = async (req, res) => {
   try {
     const order = new Order(req.body);
     await order.save();
-    return res.status(201).json(order);
+    return res.status(200).json(order);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

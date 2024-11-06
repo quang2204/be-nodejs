@@ -20,7 +20,7 @@ export const AddCart = async (req, res) => {
 
     // Lưu thay đổi vào cơ sở dữ liệu
     await cartItem.save();
-    return res.status(201).json({ message: "Thêm thành công", data: cartItem });
+    return res.status(200).json({ message: "Thêm thành công", data: cartItem });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
