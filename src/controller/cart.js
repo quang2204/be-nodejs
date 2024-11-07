@@ -51,6 +51,15 @@ export const DeleteCart = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+export const DeleteAllCart = async (req, res) => {
+  try {
+    const { userid } = req.params;
+    await Cart.deleteMany({ user: userid });
+    return res.status(200).json({ message: "Xóa thanh cong" });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
 export const UpdateCart = async (req, res) => {
   try {
     const { id } = req.params;
