@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema({
+  madh: {
+    type: Number,
+    required: true,
+  },
   customerName: {
     type: String,
     required: true,
@@ -46,6 +50,13 @@ const orderSchema = new mongoose.Schema({
     type: String,
     enum: ["COD", "VNPAY", "MOMO"],
     default: "COD",
+  },
+  userId: {
+    type: String,
+    required: true,
+  },
+  note: {
+    type: String,
   },
 });
 export const Order = mongoose.model("Order", orderSchema);

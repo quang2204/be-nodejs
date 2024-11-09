@@ -8,6 +8,15 @@ export const GetOrder = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+export const GetOrderByUser = async (req, res) => {
+  try {
+    const data = await Order.find({ userId: req.params.userid });
+    console.log(req.params.userid);
+    return res.status(200).json(data);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
 export const AddOrder = async (req, res) => {
   try {
     const order = new Order(req.body);
