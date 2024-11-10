@@ -54,7 +54,9 @@ export const DeleteOrder = async (req, res) => {
 export const DetailOrder = async (req, res) => {
   try {
     const { id } = req.params;
-    const data = await Order.findById(id);
+    const data = await Order.findById(id)
+      .populate("voucher", "discount")
+      .populate("products.productId", "name price imageUrl");
     return res.status(200).json(data);
   } catch (error) {
     return res.status(500).json({ message: error.message });
