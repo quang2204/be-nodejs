@@ -57,7 +57,7 @@ export const singin = async (req, res) => {
       return res.status(400).json({ message: "Sai mật khẩu" });
     }
     const token = jwt.sign({ id: user._id }, "200422", {
-      expiresIn: "10h",
+      expiresIn: "30s",
     });
     res.cookie("token", token, { httpOnly: true });
     return res.status(200).json({
