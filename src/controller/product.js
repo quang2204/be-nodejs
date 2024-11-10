@@ -3,6 +3,7 @@ import { Product } from "../model/product";
 const GetAllProduct = async (req, res) => {
   try {
     const data = await Product.find().populate("caterori", "name");
+
     // const transformedData = data.map((product) => ({
     //   ...product.toObject(),
     //   category_name: product.caterori.name,
@@ -36,7 +37,7 @@ const GetProductDetails = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate(
       "caterori",
-      "name"
+      "name",
     );
 
     // Check if the product exists

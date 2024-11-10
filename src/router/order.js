@@ -7,6 +7,7 @@ import {
   GetOrderByUser,
   UpdateOrder,
 } from "../controller/order";
+import { DeleteAllOrder } from "../controller/cart";
 
 const router = express.Router();
 router.get("/orders", GetOrder);
@@ -15,4 +16,6 @@ router.patch("/order/:id", UpdateOrder);
 router.delete("/order/:id", DeleteOrder);
 router.get("/order/user/:userid", GetOrderByUser);
 router.get("/order/:id", DetailOrder);
+// router.delete("/order", DeleteAllOrder);
+
 export default router;

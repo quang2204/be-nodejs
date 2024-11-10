@@ -23,14 +23,8 @@ const orderSchema = new mongoose.Schema({
   },
   products: [
     {
-      productId: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-      },
-      quantity: {
-        type: Number,
-        required: true,
-      },
+      productId: { type: mongoose.Schema.Types.ObjectId, ref: "products" },
+      quantity: Number,
     },
   ],
   orderDate: {
@@ -44,7 +38,7 @@ const orderSchema = new mongoose.Schema({
   },
   voucher: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Voucher",
+    ref: "vouchers",
   },
   payment: {
     type: String,

@@ -1,4 +1,5 @@
 import { Cart } from "../model/cart";
+import { Order } from "../model/order";
 export const AddCart = async (req, res) => {
   try {
     const { userid } = req.params;
@@ -60,6 +61,15 @@ export const DeleteAllCart = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+// export const DeleteAllOrder = async (req, res) => {
+//   try {
+//     const { userid } = req.params;
+//     await Order.deleteMany();
+//     return res.status(200).json({ message: "Xóa thanh cong" });
+//   } catch (error) {
+//     return res.status(500).json({ message: error.message });
+//   }
+// };
 export const UpdateCart = async (req, res) => {
   try {
     const { id } = req.params;

@@ -2,7 +2,9 @@ import { Order } from "../model/order";
 
 export const GetOrder = async (req, res) => {
   try {
-    const data = await Order.find();
+    const data = await Order.find()
+      .populate("voucher", "discount")
+      .populate("products.productId", "name price imageUrl");
     return res.status(200).json(data);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -10,7 +12,9 @@ export const GetOrder = async (req, res) => {
 };
 export const GetOrderByUser = async (req, res) => {
   try {
-    const data = await Order.find({ userId: req.params.userid });
+    const data = await Order.find({ userId: req.params.userid })
+      .populate("voucher", "discount")
+      .populate("products.productId", "name price imageUrl");
     console.log(req.params.userid);
     return res.status(200).json(data);
   } catch (error) {
