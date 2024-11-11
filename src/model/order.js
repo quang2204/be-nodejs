@@ -33,8 +33,15 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["Pending", "Shipped", "Delivered"],
-    default: "Pending",
+    enum: [
+      "Wait for confirmation",
+      "Confirm",
+      "Shipping",
+      "Successful delivery",
+      "Success",
+      "Canceled",
+    ],
+    default: "Wait for confirmation",
   },
   voucher: {
     type: mongoose.Schema.Types.ObjectId,
