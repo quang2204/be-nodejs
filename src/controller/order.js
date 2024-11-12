@@ -62,3 +62,13 @@ export const DetailOrder = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+export const GetOrderBystatus = async (req, res) => {
+  try {
+    const data = await Order.find({ status: req.params.status })
+      .populate("voucher", "discount")
+      .populate("products.productId", "name price imageUrl");
+    return res.status(200).json(data);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
