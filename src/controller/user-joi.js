@@ -87,9 +87,9 @@ export const updateUser = async (req, res) => {
 
     // Check if another user has the same username
     const checkname = await User.findOne({ username });
-    
+
     // Check if the username belongs to a different user
-    if (checkname && checkname._id.toString() !== id) { 
+    if (checkname && checkname._id.toString() !== id) {
       return res.status(400).json({
         message: "Username already exists",
       });
@@ -103,7 +103,6 @@ export const updateUser = async (req, res) => {
     return res.status(200).json({
       message: "Update success",
     });
-
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -123,6 +122,33 @@ export const DetailUser = async (req, res) => {
   try {
     const data = await User.findById(req.params.id);
     return res.status(200).json(data);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+export const UpdatePassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { beforePassword, newPassword, confirmPassword } = req.body;
+    const user = await User.findById(id);
+    const isMatch = await hash.compare(beforePassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Mật khẩu hiện tại không đúng",
+      });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        message: "2 mật khẩu k trùng nhau",
+      });
+    }
+    const hashedPassword = await hash.hash(newPassword, 10);
+    await User.findByIdAndUpdate(
+      id,
+      { password: hashedPassword },
+      { new: true }
+    );
+    return res.status(200).json({ message: "Thay đổi mật khẩu thành công" });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
