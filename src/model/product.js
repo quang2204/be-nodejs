@@ -10,6 +10,15 @@ const productSchma = new mongoose.Schema(
       ref: "caterories",
       required: true,
     },
+    variant: [
+      {
+        color: { type: String },
+        size: { type: String },
+        quantity: { type: Number },
+        price: { type: Number },
+        imageUrl: { type: String },
+      },
+    ],
     price: {
       type: Number,
       required: true,
@@ -22,22 +31,22 @@ const productSchma = new mongoose.Schema(
       type: String,
       required: true,
     },
-    albumImg: {
-      type: [
-        {
-          url: {
-            type:String,
-            required:true
-          },
-          description: { type: String }  
-        },
-      ],
-      required: true,
-    },
+    // albumImg: {
+    //   type: [
+    //     {
+    //       url: {
+    //         type: String,
+    //         required: true,
+    //       },
+    //       description: { type: String },
+    //     },
+    //   ],
+    //   required: true,
+    // },
   },
   {
     versionKey: false,
     timestamps: true,
-  }
+  },
 );
 export const Product = mongoose.model("products", productSchma);
