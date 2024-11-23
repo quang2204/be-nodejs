@@ -12,11 +12,30 @@ const productSchma = new mongoose.Schema(
     },
     variant: [
       {
-        color: { type: String },
-        size: { type: String },
-        quantity: { type: Number },
-        price: { type: Number },
-        imageUrl: { type: String },
+        quantity: {
+          type: Number,
+          required: true,
+        },
+        color: {
+          type: String,
+          required: true,
+        },
+        imgUrl: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+    sizes: [
+      {
+        quantity: {
+          type: Number,
+          required: true,
+        },
+        size: {
+          type: String,
+          required: true,
+        },
       },
     ],
     price: {

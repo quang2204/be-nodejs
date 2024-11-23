@@ -3,24 +3,37 @@ import { Order } from "../model/order";
 export const AddCart = async (req, res) => {
   try {
     const { userid } = req.params;
-    const { productid, quantity } = req.body;
-
+    const { productid, quantity, color, size } = req.body;
     // Tìm sản phẩm trong giỏ hàng của người dùng
     let cartItem = await Cart.findOne({ user: userid, product: productid });
+
     if (!cartItem) {
       // Nếu sản phẩm chưa có trong giỏ hàng, tạo sản phẩm mới với số lượng
       cartItem = new Cart({
         user: userid,
         product: productid,
         quantity: quantity || 1, // Mặc định là 1 nếu không có quantity
+        color,
+        size,
       });
-    } else {
+    }
+    // else if (cartItem.color !== color || cartItem.size !== size) {
+    //   cartItem = new Cart({
+    //     user: userid,
+    //     product: productid,
+    //     quantity: quantity || 1, // Mặc định là 1 nếu không có quantity
+    //     color,
+    //     size,
+    //   });
+    // }
+    else {
       // Nếu sản phẩm đã có, tăng số lượng
       cartItem.quantity += quantity;
     }
 
     // Lưu thay đổi vào cơ sở dữ liệu
     await cartItem.save();
+    console.log(cartItem);
     return res.status(201).json({ message: "Thêm thành công", data: cartItem });
   } catch (error) {
     return res.status(500).json({ message: error.message });
