@@ -10,23 +10,23 @@ const productSchma = new mongoose.Schema(
       ref: "caterories",
       required: true,
     },
-    variant: [
+    variants: [
       {
         quantity: {
           type: Number,
-          required: true,
+          required: false,
         },
         size: {
           type: String,
-          required: true,
+          required: false,
         },
         color: {
           type: String,
-          required: true,
+          required: false,
         },
         imgUrl: {
           type: String,
-          required: true,
+          required: false,
         },
       },
     ],
@@ -43,18 +43,10 @@ const productSchma = new mongoose.Schema(
       type: String,
       required: true,
     },
-    // albumImg: {
-    //   type: [
-    //     {
-    //       url: {
-    //         type: String,
-    //         required: true,
-    //       },
-    //       description: { type: String },
-    //     },
-    //   ],
-    //   required: true,
-    // },
+    albumImg: {
+      type: [String],
+      required: false,
+    },
   },
   {
     versionKey: false,
