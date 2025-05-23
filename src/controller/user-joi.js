@@ -35,7 +35,7 @@ export const singup = async (req, res) => {
       error: error.message,
     });
   }
-};
+}; 
 const ACCESS_TOKEN_SECRET =
   "76ca127f19145007f2723d48ce8cbf296fb7427ac4ffe557daa38952697dabb272c181f843bccfd89065158f44470be37eca0f6e6ba9da90a107f2dc0b90164a";
 const REFRESH_TOKEN_SECRET =
