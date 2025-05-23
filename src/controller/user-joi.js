@@ -35,81 +35,72 @@ export const singup = async (req, res) => {
       error: error.message,
     });
   }
-}; 
+};
 const ACCESS_TOKEN_SECRET =
   "76ca127f19145007f2723d48ce8cbf296fb7427ac4ffe557daa38952697dabb272c181f843bccfd89065158f44470be37eca0f6e6ba9da90a107f2dc0b90164a";
 const REFRESH_TOKEN_SECRET =
   "040fecc7c403886ec097dc0e001ab80598ba0bdac391e72b8aeef0797f6dee72dedd5c97a2016bcbd3b641dfcc3706149313b7ca8e17c8511fafcc33763d2590";
 
-  export const signin = async (req, res) => {
-    try {
-      const { email, password } = req.body;
-  
-      // Validate input
-      const { error } = loginSchema.validate(req.body, { abortEarly: false });
-      if (error) {
-        const list = error.details.map((issue) => ({ message: issue.message }));
-        return res.status(400).json({ errors: list });
-      }
-  
-      // Tìm user theo email
-      const user = await User.findOne({ email });
-      if (!user) {
-        return res.status(400).json({ message: 'Không có tài khoản này' });
-      }
-  
-      // So sánh password đã hash
-      const isMatch = await hash.compare(password, user.password);
-      if (!isMatch) {
-        return res.status(400).json({ message: 'Sai mật khẩu' });
-      }
-  
-      // Tạo access token và refresh token
-      const accessToken = jwt.sign({ id: user._id }, ACCESS_TOKEN_SECRET, {
-        expiresIn: '15m',
-      });
-      const refreshToken = jwt.sign({ id: user._id }, REFRESH_TOKEN_SECRET, {
-        expiresIn: '7d',
-      });
-  
-      // Thiết lập cookie
-      const isProduction = process.env.NODE_ENV === 'production';
-  
-      // Set accessToken cookie
-      res.cookie('accessToken', accessToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite:'lax',
-        maxAge: 15 * 60 * 1000,
-        path: '/',
-      });
-  
-      // Set refreshToken cookie
-      res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: false,             // dev thì false vì không HTTPS
-        sameSite: 'lax',           // dev thì dùng 'lax' cho dễ
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
-        path: '/',                 // để cookie áp dụng toàn site, tránh lỗi mất cookie
-      });
-  
-      // Trả dữ liệu user (không có token trong body vì đã set cookie)
-      return res.status(200).json({
-        user: {
-          id: user._id,
-          email: user.email,
-          name: user.name,
-        },
-        message: 'Đăng nhập thành công',
-      });
-    } catch (error) {
-      console.error('Signin error:', error);
-      return res.status(500).json({
-        message: 'Internal Server Error',
-        error: error.message,
-      });
+export const signin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const { error } = loginSchema.validate(req.body, { abortEarly: false });
+    if (error) {
+      const list = error.details.map((issue) => ({ message: issue.message }));
+      return res.status(400).json({ errors: list });
     }
-  };
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Không có tài khoản này" });
+    }
+
+    const isMatch = await hash.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Sai mật khẩu" });
+    }
+
+    const accessToken = jwt.sign({ id: user._id }, ACCESS_TOKEN_SECRET, {
+      expiresIn: "15m",
+    });
+    const refreshToken = jwt.sign({ id: user._id }, REFRESH_TOKEN_SECRET, {
+      expiresIn: "7d",
+    });
+
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: false, // dev
+      sameSite: "lax",
+      maxAge: 15 * 60 * 1000,
+      path: "/",
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false, // dev
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
+    });
+
+    return res.status(200).json({
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+      },
+      message: "Đăng nhập thành công",
+    });
+  } catch (error) {
+    console.error("Signin error:", error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
 export const GetUser = async (req, res) => {
   try {
     const data = await User.find();
