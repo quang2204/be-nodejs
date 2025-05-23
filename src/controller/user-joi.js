@@ -41,56 +41,74 @@ const ACCESS_TOKEN_SECRET =
 const REFRESH_TOKEN_SECRET =
   "040fecc7c403886ec097dc0e001ab80598ba0bdac391e72b8aeef0797f6dee72dedd5c97a2016bcbd3b641dfcc3706149313b7ca8e17c8511fafcc33763d2590";
 
-export const signin = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const { error } = loginSchma.validate(req.body, { abortEarly: false });
-    if (error) {
-      const list = error.details.map((issue) => ({
-        message: issue.message,
-      }));
-      return res.status(400).json(list);
+  export const signin = async (req, res) => {
+    try {
+      const { email, password } = req.body;
+  
+      // Validate input
+      const { error } = loginSchma.validate(req.body, { abortEarly: false });
+      if (error) {
+        const list = error.details.map((issue) => ({ message: issue.message }));
+        return res.status(400).json(list);
+      }
+  
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(400).json({ message: 'Không có tài khoản này' });
+      }
+  
+      const isMatch = await hash.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: 'Sai mật khẩu' });
+      }
+  
+      // Tạo access token & refresh token
+      const accessToken = jwt.sign({ id: user._id }, ACCESS_TOKEN_SECRET, {
+        expiresIn: '15m',
+      });
+      const refreshToken = jwt.sign({ id: user._id }, REFRESH_TOKEN_SECRET, {
+        expiresIn: '7d',
+      });
+  
+      // Nếu bạn muốn lưu refreshToken trong DB hoặc cache thì lưu ở đây
+      // user.refreshToken = refreshToken;
+      // await user.save();
+  
+      // Gửi cookie, cấu hình phù hợp với môi trường dev/production
+      const isProduction = process.env.NODE_ENV === 'production';
+  
+      res.cookie('accessToken', accessToken, {
+        httpOnly: true,
+        secure: isProduction, // true khi deploy https, dev thì false
+        sameSite: isProduction ? 'none' : 'lax', // cross-site khi deploy https
+        maxAge: 15 * 60 * 1000, // 15 phút
+        path: '/', // cookie áp dụng cho toàn bộ site
+      });
+  
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
+        path: '/api/refresh-token', // hoặc '/'
+      });
+  
+      // Không cần trả token trong JSON, vì đã set cookie rồi (bảo mật hơn)
+      return res.status(200).json({
+        user: {
+          id: user._id,
+          email: user.email,
+          name: user.name,
+        },
+        message: 'Đăng nhập thành công',
+      });
+    } catch (error: any) {
+      return res.status(500).json({
+        message: 'Internal Server Error',
+        error: error.message,
+      });
     }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "Không có tài khoản này" });
-    }
-
-    const isMatch = await hash.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Sai mật khẩu" });
-    }
-
-    // Generate access and refresh tokens
-    const accessToken = jwt.sign({ id: user._id }, ACCESS_TOKEN_SECRET, {
-      expiresIn: "15m", // 15 minutes
-    });
-    const refreshToken = jwt.sign({ id: user._id }, REFRESH_TOKEN_SECRET, {
-      expiresIn: "7d", // 7 days
-    });
-
-    // Optionally save refresh token in DB or a Redis store
-    // user.refreshToken = refreshToken;
-    // await user.save();
-
-    res.cookie("accessToken", accessToken, { httpOnly: true, secure: true });
-    res.cookie("refreshToken", refreshToken, { httpOnly: true, secure: true });
-
-    return res.status(200).json({
-      accessToken,
-      refreshToken,
-      user,
-      message: "Đăng nhập thành công",
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Internal Server Error",
-      error: error.message,
-    });
-  }
-};
+  };
 export const GetUser = async (req, res) => {
   try {
     const data = await User.find();
