@@ -17,6 +17,5 @@ app.use("/api", categoryRouter);
 app.use("/api", cartRouter);
 app.use("/api", voucher);
 app.use("/api", order);
- 
 // export const viteNodeApp = app;
 export default app;
