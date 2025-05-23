@@ -78,7 +78,7 @@ const REFRESH_TOKEN_SECRET =
       // Set accessToken cookie
       res.cookie('accessToken', accessToken, {
         httpOnly: true,
-        secure: isProduction,
+        secure: false,
         sameSite: isProduction ? 'none' : 'lax',
         maxAge: 15 * 60 * 1000,
         path: '/',
