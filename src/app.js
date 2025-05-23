@@ -8,7 +8,10 @@ import cartRouter from "./router/cart";
 import voucher from "./router/voucher";
 import order from "./router/order";
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3000', // domain frontend của bạn
+    credentials: true, // cho phép gửi cookie, credentials
+  }));
 app.use(express.json());
 connectDb();
 app.use("/api", productRouter);
