@@ -87,10 +87,10 @@ const REFRESH_TOKEN_SECRET =
       // Set refreshToken cookie
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        path: '/api/refresh-token', // bạn có thể đổi thành '/'
+        secure: false,             // dev thì false vì không HTTPS
+        sameSite: 'lax',           // dev thì dùng 'lax' cho dễ
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
+        path: '/',                 // để cookie áp dụng toàn site, tránh lỗi mất cookie
       });
   
       // Trả dữ liệu user (không có token trong body vì đã set cookie)
