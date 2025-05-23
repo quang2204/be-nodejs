@@ -35,35 +35,54 @@ export const singup = async (req, res) => {
       error: error.message,
     });
   }
-};
-export const singin = async (req, res) => {
+}; 
+const ACCESS_TOKEN_SECRET =
+  "76ca127f19145007f2723d48ce8cbf296fb7427ac4ffe557daa38952697dabb272c181f843bccfd89065158f44470be37eca0f6e6ba9da90a107f2dc0b90164a";
+const REFRESH_TOKEN_SECRET =
+  "040fecc7c403886ec097dc0e001ab80598ba0bdac391e72b8aeef0797f6dee72dedd5c97a2016bcbd3b641dfcc3706149313b7ca8e17c8511fafcc33763d2590";
+
+export const signin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const { error } = loginSchma.validate(req.body, {
-      abortEarly: false,
-    });
+
+    const { error } = loginSchma.validate(req.body, { abortEarly: false });
     if (error) {
       const list = error.details.map((issue) => ({
         message: issue.message,
       }));
       return res.status(400).json(list);
     }
+
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: "Không có tài khoản này" });
     }
+
     const isMatch = await hash.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Sai mật khẩu" });
     }
-    const token = jwt.sign({ id: user._id }, "200422", {
-      expiresIn: "1d",
+
+    // Generate access and refresh tokens
+    const accessToken = jwt.sign({ id: user._id }, ACCESS_TOKEN_SECRET, {
+      expiresIn: "15m", // 15 minutes
     });
-    res.cookie("token", token, { httpOnly: true });
+    const refreshToken = jwt.sign({ id: user._id }, REFRESH_TOKEN_SECRET, {
+      expiresIn: "7d", // 7 days
+    });
+
+    // Optionally save refresh token in DB or a Redis store
+    // user.refreshToken = refreshToken;
+    // await user.save();
+
+    res.cookie("accessToken", accessToken, { httpOnly: true, secure: true });
+    res.cookie("refreshToken", refreshToken, { httpOnly: true, secure: true });
+
     return res.status(200).json({
-      token,
+      accessToken,
+      refreshToken,
       user,
-      message: "Đăng Nhập Thành Công",
+      message: "Đăng nhập thành công",
     });
   } catch (error) {
     return res.status(500).json({
