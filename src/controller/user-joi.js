@@ -1,6 +1,6 @@
 import { User } from "../model/User";
 import hash from "bcryptjs";
-import { reqSchma, loginSchma } from "../Schma/auth";
+import { reqSchma, loginSchema } from "../Schma/auth";
 import jwt from "jsonwebtoken";
 export const singup = async (req, res) => {
   try {
@@ -46,23 +46,25 @@ const REFRESH_TOKEN_SECRET =
       const { email, password } = req.body;
   
       // Validate input
-      const { error } = loginSchma.validate(req.body, { abortEarly: false });
+      const { error } = loginSchema.validate(req.body, { abortEarly: false });
       if (error) {
         const list = error.details.map((issue) => ({ message: issue.message }));
-        return res.status(400).json(list);
+        return res.status(400).json({ errors: list });
       }
   
+      // Tìm user theo email
       const user = await User.findOne({ email });
       if (!user) {
         return res.status(400).json({ message: 'Không có tài khoản này' });
       }
   
+      // So sánh password đã hash
       const isMatch = await hash.compare(password, user.password);
       if (!isMatch) {
         return res.status(400).json({ message: 'Sai mật khẩu' });
       }
   
-      // Tạo access token & refresh token
+      // Tạo access token và refresh token
       const accessToken = jwt.sign({ id: user._id }, ACCESS_TOKEN_SECRET, {
         expiresIn: '15m',
       });
@@ -70,30 +72,28 @@ const REFRESH_TOKEN_SECRET =
         expiresIn: '7d',
       });
   
-      // Nếu bạn muốn lưu refreshToken trong DB hoặc cache thì lưu ở đây
-      // user.refreshToken = refreshToken;
-      // await user.save();
-  
-      // Gửi cookie, cấu hình phù hợp với môi trường dev/production
+      // Thiết lập cookie
       const isProduction = process.env.NODE_ENV === 'production';
   
+      // Set accessToken cookie
       res.cookie('accessToken', accessToken, {
         httpOnly: true,
-        secure: isProduction, // true khi deploy https, dev thì false
-        sameSite: isProduction ? 'none' : 'lax', // cross-site khi deploy https
-        maxAge: 15 * 60 * 1000, // 15 phút
-        path: '/', // cookie áp dụng cho toàn bộ site
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        maxAge: 15 * 60 * 1000,
+        path: '/',
       });
   
+      // Set refreshToken cookie
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: isProduction,
         sameSite: isProduction ? 'none' : 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
-        path: '/api/refresh-token', // hoặc '/'
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: '/api/refresh-token', // bạn có thể đổi thành '/'
       });
   
-      // Không cần trả token trong JSON, vì đã set cookie rồi (bảo mật hơn)
+      // Trả dữ liệu user (không có token trong body vì đã set cookie)
       return res.status(200).json({
         user: {
           id: user._id,
@@ -102,7 +102,8 @@ const REFRESH_TOKEN_SECRET =
         },
         message: 'Đăng nhập thành công',
       });
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Signin error:', error);
       return res.status(500).json({
         message: 'Internal Server Error',
         error: error.message,

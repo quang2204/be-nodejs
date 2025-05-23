@@ -31,7 +31,7 @@ export const reqSchma = Joi.object({
     }),
     role: Joi.string().valid('admin', 'user').default('user'),
 });
-export const loginSchma = Joi.object({
+export const loginSchema = Joi.object({
   email: Joi.string()
     .email()
     .required()
