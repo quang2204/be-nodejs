@@ -16,5 +16,5 @@ router.get("/product/:id", GetProductDetails);
 router.get("/products/category/:category", GetProductsCategory);
 router.post("/products",checkout, AddProduct);
 router.patch("/products/:id", UpdateProduct);
-router.delete("/products/:id", DeleteProduct);
+router.delete("/products/:id",checkout, DeleteProduct);
 export default router;

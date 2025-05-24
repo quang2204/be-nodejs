@@ -69,36 +69,33 @@ export const signin = async (req, res) => {
       },
       ACCESS_TOKEN_SECRET,
       {
-        expiresIn: "5s",
+        expiresIn: "1d",
       }
     );
-    
+
     const refreshToken = jwt.sign({ id: user._id }, REFRESH_TOKEN_SECRET, {
       expiresIn: "7d",
     });
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: false, 
+      secure: false,
       sameSite: "lax",
-      maxAge: 15 * 60 * 1000,
+      maxAge: 1 * 24 * 60 * 60 * 1000,
       path: "/",
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false, 
+      secure: false,
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
 
     return res.status(200).json({
-      user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-      },
+      user,
+      token: accessToken,
       message: "Đăng nhập thành công",
     });
   } catch (error) {
@@ -118,7 +115,9 @@ export const refreshTokenHandler = async (req, res) => {
 
     jwt.verify(token, REFRESH_TOKEN_SECRET, async (err, decoded) => {
       if (err) {
-        return res.status(403).json({ message: "Refresh token không hợp lệ hoặc đã hết hạn" });
+        return res
+          .status(403)
+          .json({ message: "Refresh token không hợp lệ hoặc đã hết hạn" });
       }
 
       const user = await User.findById(decoded.id);
@@ -133,18 +132,23 @@ export const refreshTokenHandler = async (req, res) => {
           role: user.role,
         },
         ACCESS_TOKEN_SECRET,
-        { expiresIn: "15m" }
+        { expiresIn: "1d" }
       );
 
       res.cookie("accessToken", newAccessToken, {
         httpOnly: true,
         secure: false, // đổi thành true khi chạy production qua HTTPS
         sameSite: "lax",
-        maxAge: 15 * 60 * 1000, // 15 phút
+        maxAge: 1 * 24 * 60 * 60 * 1000, // 15 phút
         path: "/",
       });
 
-      return res.status(200).json({ message: "Làm mới access token thành công" });
+      return res
+        .status(200)
+        .json({
+          message: "Làm mới access token thành công",
+          token: newAccessToken,
+        });
     });
   } catch (error) {
     console.error("Refresh token error:", error);
