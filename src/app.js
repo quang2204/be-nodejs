@@ -7,11 +7,13 @@ import categoryRouter from "./router/Caterory";
 import cartRouter from "./router/cart";
 import voucher from "./router/voucher";
 import order from "./router/order";
+import cookieParser from "cookie-parser";
 const app = express();
 app.use(cors({
     origin: 'http://localhost:3000', // domain frontend của bạn
     credentials: true, // cho phép gửi cookie, credentials
   }));
+  app.use(cookieParser());
 app.use(express.json());
 connectDb();
 app.use("/api", productRouter);
@@ -21,5 +23,5 @@ app.use("/api", cartRouter);
 app.use("/api", voucher);
 app.use("/api", order);
 // sa
-export const viteNodeApp = app;
-// export default app;
+// export const viteNodeApp = app;
+export default app;

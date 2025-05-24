@@ -61,16 +61,25 @@ export const signin = async (req, res) => {
       return res.status(400).json({ message: "Sai mật khẩu" });
     }
 
-    const accessToken = jwt.sign({ id: user._id }, ACCESS_TOKEN_SECRET, {
-      expiresIn: "15m",
-    });
+    const accessToken = jwt.sign(
+      {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+      },
+      ACCESS_TOKEN_SECRET,
+      {
+        expiresIn: "5s",
+      }
+    );
+    
     const refreshToken = jwt.sign({ id: user._id }, REFRESH_TOKEN_SECRET, {
       expiresIn: "7d",
     });
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: false, // dev
+      secure: false, 
       sameSite: "lax",
       maxAge: 15 * 60 * 1000,
       path: "/",
@@ -78,7 +87,7 @@ export const signin = async (req, res) => {
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false, // dev
+      secure: false, 
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
@@ -98,6 +107,74 @@ export const signin = async (req, res) => {
       message: "Internal Server Error",
       error: error.message,
     });
+  }
+};
+export const refreshTokenHandler = async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken;
+    if (!token) {
+      return res.status(401).json({ message: "Không có refresh token" });
+    }
+
+    jwt.verify(token, REFRESH_TOKEN_SECRET, async (err, decoded) => {
+      if (err) {
+        return res.status(403).json({ message: "Refresh token không hợp lệ hoặc đã hết hạn" });
+      }
+
+      const user = await User.findById(decoded.id);
+      if (!user) {
+        return res.status(404).json({ message: "Người dùng không tồn tại" });
+      }
+
+      const newAccessToken = jwt.sign(
+        {
+          id: user._id,
+          email: user.email,
+          role: user.role,
+        },
+        ACCESS_TOKEN_SECRET,
+        { expiresIn: "15m" }
+      );
+
+      res.cookie("accessToken", newAccessToken, {
+        httpOnly: true,
+        secure: false, // đổi thành true khi chạy production qua HTTPS
+        sameSite: "lax",
+        maxAge: 15 * 60 * 1000, // 15 phút
+        path: "/",
+      });
+
+      return res.status(200).json({ message: "Làm mới access token thành công" });
+    });
+  } catch (error) {
+    console.error("Refresh token error:", error);
+    return res.status(500).json({
+      message: "Lỗi server khi làm mới token",
+      error: error.message,
+    });
+  }
+};
+export const logout = async (req, res) => {
+  try {
+    // Xóa cả accessToken và refreshToken từ cookie
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: false, // true nếu dùng HTTPS
+      sameSite: "lax",
+      path: "/",
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+    });
+
+    return res.status(200).json({ message: "Đăng xuất thành công" });
+  } catch (error) {
+    console.error("Logout error:", error);
+    return res.status(500).json({ message: "Lỗi server khi đăng xuất" });
   }
 };
 

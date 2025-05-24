@@ -1,23 +1,23 @@
 import jwt from "jsonwebtoken";
 
-// Middleware to check token validity
+// It's better to store secrets in environment variables
+const ACCESS_TOKEN_SECRET =
+  "76ca127f19145007f2723d48ce8cbf296fb7427ac4ffe557daa38952697dabb272c181f843bccfd89065158f44470be37eca0f6e6ba9da90a107f2dc0b90164a";
+
+// Middleware to check token validity from cookies
 export const checkout = async (req, res, next) => {
   try {
-    // Ensure authorization header is present
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
+    const token = req.cookies?.accessToken;
+
+    if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Authorization header missing",
+        message: "Access token missing in cookies",
       });
     }
 
-    // Extract token from header
-    const token = authHeader.split(" ")[1];
-    // Verify token
-    jwt.verify(token, process.env.JWT_SECRET || "200422", (err, data) => {
+    jwt.verify(token, ACCESS_TOKEN_SECRET, (err, decoded) => {
       if (err) {
-        // Token errors
         if (err.name === "TokenExpiredError") {
           return res.status(401).json({
             success: false,
@@ -28,15 +28,21 @@ export const checkout = async (req, res, next) => {
             success: false,
             message: "Invalid token",
           });
-        } else {
+        }  else {
           return res.status(400).json({
             success: false,
             message: "Token verification failed",
           });
         }
       }
-
-      // If no error, proceed to the next middleware
+      if (decoded.role !=="admin") {
+        return res.status(403).json({
+          success: false,
+          message: "Access denied: Admins only",
+        });
+      }
+      // Attach decoded user to request
+      req.user = decoded;
       next();
     });
   } catch (error) {
