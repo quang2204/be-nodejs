@@ -90,6 +90,7 @@ export const signin = async (req, res) => {
       secure: true,
       sameSite: "strict",
       maxAge: 1 * 24 * 60 * 60 * 1000,
+      domain: "https://nextnode-mu.vercel.app",
       path: "/",
     });
 
@@ -98,6 +99,7 @@ export const signin = async (req, res) => {
       secure: true,
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      domain: "https://nextnode-mu.vercel.app",
       path: "/",
     });
 
@@ -149,6 +151,7 @@ export const refreshTokenHandler = async (req, res) => {
           secure: true,
           sameSite: "strict",
           maxAge: 1 * 24 * 60 * 60 * 1000,
+          domain: "https://nextnode-mu.vercel.app",
           path: "/",
         });
 
