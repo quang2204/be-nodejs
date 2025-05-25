@@ -120,7 +120,7 @@ export const refreshTokenHandler = async (req, res) => {
 
     jwt.verify(
       token,
-      process.env.REFRESH_TOKEN_SECRET,
+      REFRESH_TOKEN_SECRET,
       async (err, decoded) => {
         if (err) {
           return res
