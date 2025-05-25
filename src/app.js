@@ -10,7 +10,7 @@ import order from "./router/order";
 import cookieParser from "cookie-parser";
 const app = express();
 app.use(cors({
-    origin: 'http://localhost:3000', // domain frontend của bạn
+    origin: 'https://nextnode-mu.vercel.app/', // domain frontend của bạn
     credentials: true, // cho phép gửi cookie, credentials
   }));
   app.use(cookieParser());
