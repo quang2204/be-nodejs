@@ -89,7 +89,7 @@ export const signin = async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: "Lax",
-      maxAge: 1 * 24 * 60 * 60 * 1000,
+      expires: 1 * 24 * 60 * 60 * 1000,
       path: "/",
     });
 
@@ -97,7 +97,7 @@ export const signin = async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: "Lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      expires: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
 
@@ -147,7 +147,7 @@ export const refreshTokenHandler = async (req, res) => {
           httpOnly: true,
           secure: true,
           sameSite: "Lax",
-          maxAge: 1 * 24 * 60 * 60 * 1000,
+          expires: 1 * 24 * 60 * 60 * 1000,
           path: "/",
         });
 
