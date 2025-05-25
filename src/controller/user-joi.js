@@ -88,21 +88,22 @@ export const signin = async (req, res) => {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "Strict",
-      expires: 1 * 24 * 60 * 60 * 1000,
+      sameSite: "strict",
+      maxAge: 1 * 24 * 60 * 60 * 1000,
       path: "/",
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "Strict",
-      expires: 7 * 24 * 60 * 60 * 1000,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
 
     return res.status(200).json({
       user,
+      token:accessToken,
       message: "Đăng nhập thành công",
     });
   } catch (error) {
@@ -139,21 +140,20 @@ export const refreshTokenHandler = async (req, res) => {
             email: user.email,
             role: user.role,
           },
-          ACCESS_TOKEN_SECRET,
+         ACCESS_TOKEN_SECRET,
           { expiresIn: "1d" }
         );
 
         res.cookie("accessToken", newAccessToken, {
           httpOnly: true,
           secure: true,
-          sameSite: "Strict",
-          expires: 1 * 24 * 60 * 60 * 1000,
+          sameSite: "strict",
+          maxAge: 1 * 24 * 60 * 60 * 1000,
           path: "/",
         });
 
         return res.status(200).json({
           message: "Làm mới token thành công",
-          token:newAccessToken
         });
       }
     );
@@ -169,14 +169,14 @@ export const logout = async (req, res) => {
     res.clearCookie("accessToken", {
       httpOnly: true,
       secure: false, // true nếu dùng HTTPS
-      sameSite: "Strict",
+      sameSite: "lax",
       path: "/",
     });
 
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: false,
-      sameSite: "Strict",
+      sameSite: "lax",
       path: "/",
     });
 
