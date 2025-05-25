@@ -88,7 +88,7 @@ export const signin = async (req, res) => {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "strict",
+      sameSite: "Lax",
       maxAge: 1 * 24 * 60 * 60 * 1000,
       path: "/",
     });
@@ -96,7 +96,7 @@ export const signin = async (req, res) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "strict",
+      sameSite: "Lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
@@ -146,7 +146,7 @@ export const refreshTokenHandler = async (req, res) => {
         res.cookie("accessToken", newAccessToken, {
           httpOnly: true,
           secure: true,
-          sameSite: "strict",
+          sameSite: "Lax",
           maxAge: 1 * 24 * 60 * 60 * 1000,
           path: "/",
         });
