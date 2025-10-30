@@ -10,26 +10,6 @@ const productSchma = new mongoose.Schema(
       ref: "caterories",
       required: true,
     },
-    variants: [
-      {
-        quantity: {
-          type: Number,
-          required: false,
-        },
-        size: {
-          type: String,
-          required: false,
-        },
-        color: {
-          type: String,
-          required: false,
-        },
-        imgUrl: {
-          type: String,
-          required: false,
-        },
-      },
-    ],
 
     price: {
       type: Number,
