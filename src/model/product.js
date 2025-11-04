@@ -23,10 +23,6 @@ const productSchma = new mongoose.Schema(
       type: String,
       required: true,
     },
-    albumImg: {
-      type: [String],
-      required: false,
-    },
   },
   {
     versionKey: false,
