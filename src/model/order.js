@@ -17,6 +17,7 @@ const orderSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  
   address: {
     type: String,
     required: true,
@@ -42,10 +43,6 @@ const orderSchema = new mongoose.Schema({
       "Canceled",
     ],
     default: "Wait for confirmation",
-  },
-  voucher: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "vouchers",
   },
   payment: {
     type: String,

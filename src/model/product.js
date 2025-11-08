@@ -23,10 +23,15 @@ const productSchma = new mongoose.Schema(
       type: String,
       required: true,
     },
+    status: {
+      type: Boolean,
+      required: true,
+      default: true,
+    },
   },
   {
     versionKey: false,
     timestamps: true,
-  },
+  }
 );
 export const Product = mongoose.model("products", productSchma);

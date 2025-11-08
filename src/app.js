@@ -6,6 +6,7 @@ import userRouter from "./router/User";
 import categoryRouter from "./router/Caterory";
 import cartRouter from "./router/cart";
 import voucher from "./router/voucher";
+import dashboardRouter from "./router/dashboard";
 import order from "./router/order";
 import cookieParser from "cookie-parser";
 const app = express();
@@ -17,6 +18,7 @@ app.use(cors({
 app.use(express.json());
 connectDb();
 app.use("/api", productRouter);
+app.use("/api", dashboardRouter);
 app.use("/api", userRouter);
 app.use("/api", categoryRouter);
 app.use("/api", cartRouter);
