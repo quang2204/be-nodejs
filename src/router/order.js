@@ -16,5 +16,5 @@ router.delete("/order/:id", DeleteOrder);
 router.get("/order/user/:userid", GetOrderByUser);
 router.get("/order/:id", DetailOrder);
 router.get("/order/status/:status/:userid", GetOrderByStatus);
-// router.delete("/order", DeleteAllOrder);
+
 export default router;

@@ -31,6 +31,10 @@ const userSchma = new mongoose.Schema(
     phone: {
       type: String,
     },
+    active: {
+      type: Boolean,
+      default:false
+    }
   },
   {
     versionKey: false,

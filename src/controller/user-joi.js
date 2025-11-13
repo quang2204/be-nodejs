@@ -190,10 +190,35 @@ export const logout = async (req, res) => {
 
 export const GetUser = async (req, res) => {
   try {
-    const data = await User.find();
-    return res.status(200).json(data);
+    // Lấy page và limit từ query params, mặc định page=1, limit=10
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    // Tính toán số document cần bỏ qua
+    const skip = (page - 1) * limit;
+
+    // Lấy tổng số documents
+    const total = await User.countDocuments();
+
+    // Lấy data với phân trang
+    const data = await User.find().skip(skip).limit(limit);
+
+    // Tính toán thông tin phân trang
+    const totalPages = Math.ceil(total / limit);
+
+    return res.status(200).json({
+      data,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems: total,
+        itemsPerPage: limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+    });
   } catch (error) {
-    return res.status(500).json(error.message);
+    return res.status(500).json({ message: error.message });
   }
 };
 export const updateUser = async (req, res) => {
