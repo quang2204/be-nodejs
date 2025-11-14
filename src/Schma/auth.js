@@ -31,6 +31,23 @@ export const reqSchma = Joi.object({
     }),
     role: Joi.string().valid('admin', 'user').default('user'),
 });
+
+export const addUserSchma = Joi.object({
+  username: Joi.string().required().min(3).trim().messages({
+    "any.required": "Tên đăng ký không được để trống",
+    "string.min": "Tên đăng ký phải có ít nhất 3 ký tự",
+  }),
+  email: Joi.string().email().required().messages({
+    "string.email": "Địa chỉ email không hợp lệ",
+    "any.required": "Email không được để trống",
+  }),
+  password: Joi.string().required().min(8).messages({
+    "any.required": "Mật khẩu không được để trống",
+    "string.min": "Mật khẩu phải có ít nhất 8 ký tự",
+  }),
+  role: Joi.string().valid("admin").default("admin"),
+});
+
 export const loginSchema = Joi.object({
   email: Joi.string()
     .email()
