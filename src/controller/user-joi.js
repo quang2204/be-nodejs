@@ -225,18 +225,24 @@ export const logout = async (req, res) => {
 
 export const GetUser = async (req, res) => {
   try {
-    // Lấy page và limit từ query params, mặc định page=1, limit=10
+    // Lấy page, limit và search từ query params
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || "";
 
     // Tính toán số document cần bỏ qua
     const skip = (page - 1) * limit;
 
-    // Lấy tổng số documents
-    const total = await User.countDocuments();
+    // Tạo query filter để tìm kiếm theo tên
+    const searchFilter = search
+      ? { username: { $regex: search, $options: "i" } }
+      : {};
 
-    // Lấy data với phân trang
-    const data = await User.find().skip(skip).limit(limit);
+    // Lấy tổng số documents với filter
+    const total = await User.countDocuments(searchFilter);
+
+    // Lấy data với phân trang và filter
+    const data = await User.find(searchFilter).skip(skip).limit(limit);
 
     // Tính toán thông tin phân trang
     const totalPages = Math.ceil(total / limit);

@@ -4,26 +4,41 @@ import { Product } from "../model/product";
 
 const DashboardStats = async (req, res) => {
   try {
-    // query: from=YYYY-MM-DD, to=YYYY-MM-DD, granularity=day|month, topLimit, recentLimit
-    let from, to;
+    // Parse and validate query parameters
     const granularity = req.query.granularity === "month" ? "month" : "day";
     const dateFormat = granularity === "month" ? "%Y-%m" : "%Y-%m-%d";
-    const topLimit = Math.min(parseInt(req.query.topLimit || "8", 10), 50);
+    const topLimit = Math.min(
+      Math.max(parseInt(req.query.topLimit, 10) || 8, 1),
+      50
+    );
     const recentLimit = Math.min(
-      parseInt(req.query.recentLimit || "5", 10),
+      Math.max(parseInt(req.query.recentLimit, 10) || 5, 1),
       50
     );
 
+    // Parse date range with validation
+    let from, to;
+
     if (req.query.from) {
       const [year, month, day] = req.query.from.split("-").map(Number);
-      from = new Date(year, month - 1, day, 0, 0, 0, 0); // Start of local day
+      if (!year || !month || !day) {
+        return res
+          .status(400)
+          .json({ message: "Invalid 'from' date format. Use YYYY-MM-DD" });
+      }
+      from = new Date(year, month - 1, day, 0, 0, 0, 0);
     } else {
-      from = new Date(new Date().getFullYear(), 0, 1); // Jan 1 of current year, local 00:00
+      from = new Date(new Date().getFullYear(), 0, 1);
     }
 
     if (req.query.to) {
       const [year, month, day] = req.query.to.split("-").map(Number);
-      to = new Date(year, month - 1, day, 23, 59, 59, 999); // End of local day
+      if (!year || !month || !day) {
+        return res
+          .status(400)
+          .json({ message: "Invalid 'to' date format. Use YYYY-MM-DD" });
+      }
+      to = new Date(year, month - 1, day, 23, 59, 59, 999);
     } else {
       const now = new Date();
       to = new Date(
@@ -34,14 +49,21 @@ const DashboardStats = async (req, res) => {
         59,
         59,
         999
-      ); // End of current local day
+      );
     }
 
-    // match cho tất cả truy vấn trong khoảng thời gian
-    const matchAll = { orderDate: { $gte: from, $lte: to } };
-    const matchPaid = { ...matchAll, status: "Success" }; // chỉ tính doanh thu khi Success
+    // Validate date range
+    if (from > to) {
+      return res
+        .status(400)
+        .json({ message: "'from' date cannot be after 'to' date" });
+    }
 
-    // 1) Totals: earnings (totalPrice), orders, unique customers (userId), total products
+    // Match conditions
+    const matchAll = { orderDate: { $gte: from, $lte: to } };
+    const matchPaid = { ...matchAll, status: "Success" };
+
+    // 1) Totals aggregation
     const totalsAggPromise = Order.aggregate([
       { $match: matchPaid },
       {
@@ -49,7 +71,7 @@ const DashboardStats = async (req, res) => {
           _id: null,
           totalOrders: { $sum: 1 },
           totalEarnings: { $sum: "$totalPrice" },
-          customers: { $addToSet: "$userId" }, // nếu không có userId, có thể thay = "$phone"
+          customers: { $addToSet: "$userId" },
         },
       },
       {
@@ -64,7 +86,7 @@ const DashboardStats = async (req, res) => {
 
     const totalProductPromise = Product.countDocuments();
 
-    // 2) Chart: số đơn theo thời gian (Order Number)
+    // 2) Order count by time period
     const orderNumberPromise = Order.aggregate([
       { $match: matchAll },
       {
@@ -77,7 +99,7 @@ const DashboardStats = async (req, res) => {
       { $project: { _id: 0, date: "$_id", count: 1 } },
     ]);
 
-    // 3) Chart: doanh thu theo thời gian (Total Order)
+    // 3) Revenue by time period
     const revenueChartPromise = Order.aggregate([
       { $match: matchPaid },
       {
@@ -90,7 +112,7 @@ const DashboardStats = async (req, res) => {
       { $project: { _id: 0, date: "$_id", revenue: 1 } },
     ]);
 
-    // 4) Best selling products (theo qty, có lookup tên/ảnh/giá nếu Product có)
+    // 4) Top selling products
     const topProductsPromise = Order.aggregate([
       { $match: matchPaid },
       { $unwind: "$products" },
@@ -114,10 +136,10 @@ const DashboardStats = async (req, res) => {
       {
         $project: {
           _id: 0,
-          productId: "$product._id",
-          name: "$product.name",
-          image: "$product.image",
-          price: "$product.price",
+          productId: "$_id",
+          name: { $ifNull: ["$product.name", "Unknown Product"] },
+          image: { $ifNull: ["$product.imageUrl", null] },
+          price: { $ifNull: ["$product.price", 0] },
           qty: 1,
         },
       },
@@ -130,8 +152,10 @@ const DashboardStats = async (req, res) => {
       .select(
         "madh customerName phone totalPrice status payment orderDate products"
       )
-      .populate("products.productId", "name image");
+      .populate("products.productId", "name imageUrl")
+      .lean();
 
+    // Execute all queries in parallel
     const [
       totalsAgg,
       totalProduct,
@@ -148,29 +172,46 @@ const DashboardStats = async (req, res) => {
       recentOrdersPromise,
     ]);
 
+    // Extract totals with default values
     const totals = totalsAgg[0] || {
       totalOrders: 0,
       totalEarnings: 0,
       totalCustomers: 0,
     };
 
+    // Return formatted response
     return res.status(200).json({
-      totals: {
-        totalEarnings: totals.totalEarnings,
-        totalOrders: totals.totalOrders,
-        totalCustomers: totals.totalCustomers,
-        totalProduct,
+      success: true,
+      data: {
+        totals: {
+          totalEarnings: totals.totalEarnings || 0,
+          totalOrders: totals.totalOrders || 0,
+          totalCustomers: totals.totalCustomers || 0,
+          totalProduct: totalProduct || 0,
+        },
+        charts: {
+          orderNumber: orderNumber || [],
+          revenueChart: revenueChart || [],
+        },
+        topProducts: topProducts || [],
+        recentOrders: recentOrders || [],
       },
-      charts: {
-        orderNumber,
-        revenueChart,
+      filter: {
+        from: from.toISOString(),
+        to: to.toISOString(),
+        granularity,
+        topLimit,
+        recentLimit,
       },
-      topProducts,
-      recentOrders,
-      filter: { from, to, granularity },
     });
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    console.error("DashboardStats Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
   }
 };
+
 export default DashboardStats;

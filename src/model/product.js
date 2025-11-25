@@ -19,6 +19,15 @@ const productSchma = new mongoose.Schema(
       type: String,
       required: true,
     },
+    abumImage: {
+      type: [String],
+      default: [],
+      required: true,
+    },
+    discount: {
+      type: Number,
+      require:false
+    },
     description: {
       type: String,
       required: true,

@@ -63,7 +63,7 @@ const GetProductDetails = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate(
       "caterori",
-      "name",
+      "name"
     );
 
     // Check if the product exists
@@ -121,13 +121,33 @@ const UpdateProduct = async (req, res) => {
 };
 const DeleteProduct = async (req, res) => {
   try {
-    const data = await Product.findByIdAndDelete(req.params.id);
-    return res.status(201).json({
-      message: "Delete success",
-      // data,
+    const productId = req.params.id;
+
+    // Kiểm tra xem product có trong đơn hàng nào không
+    const ordersWithProduct = await Order.countDocuments({
+      "products.productId": productId,
+    });
+
+    if (ordersWithProduct > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot delete product. It exists in ${ordersWithProduct} order(s)`,
+        suggestion: "Consider marking it as inactive instead",
+      });
+    }
+
+    // Nếu không có trong đơn hàng nào, có thể xóa
+    await Product.findByIdAndDelete(productId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Product deleted successfully",
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 export {
