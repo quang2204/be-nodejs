@@ -23,41 +23,49 @@ const orderSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
     products: [
       {
         productId: { type: mongoose.Schema.Types.ObjectId, ref: "products" },
-        quantity: Number,
+        quantity: { type: Number, default: 1 },
       },
     ],
+
     orderDate: {
       type: Date,
       default: Date.now,
     },
+
     status: {
       type: String,
-      enum: [
-        "Xác nhận",
-        "Đang giao hàng",
-        "Thành Công",
-        "Hủy"
-      ],
+      enum: ["Xác nhận", "Đang giao hàng", "Thành Công", "Hủy"],
       default: "Xác nhận",
     },
+
     payment: {
       type: String,
       enum: ["COD", "VNPAY", "MOMO"],
       default: "COD",
     },
+
     userId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "users",
       required: true,
     },
+
+    voucherId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "vouchers",
+      required: false,
+    },
+
     note: {
       type: String,
     },
   },
   {
-    timestamps: true, 
+    timestamps: true,
   }
 );
 

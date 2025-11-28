@@ -26,7 +26,7 @@ const productSchma = new mongoose.Schema(
     },
     discount: {
       type: Number,
-      require:false
+      require: false,
     },
     description: {
       type: String,
@@ -36,6 +36,10 @@ const productSchma = new mongoose.Schema(
       type: Boolean,
       required: true,
       default: true,
+    },
+    quantity: {
+      type: Number,
+      required: true,
     },
   },
   {

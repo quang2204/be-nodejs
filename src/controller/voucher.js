@@ -38,7 +38,7 @@ export const UpdateVoucher = async (req, res) => {
 export const DeleteVoucher = async (req, res) => {
   try {
     await Voucher.findByIdAndDelete(req.params.id);
-    return res.status(500).json({
+    return res.status(200).json({
       message: "Xóa thành công",
     });
   } catch (e) {
