@@ -5,30 +5,46 @@ import jwt from "jsonwebtoken";
 export const singup = async (req, res) => {
   try {
     const { username, email, password, role } = req.body;
-    const { error } = reqSchma.validate(req.body, {
-      abortEarly: false,
-    });
+
+    // Validate
+    const { error } = reqSchma.validate(req.body, { abortEarly: false });
     if (error) {
       const list = error.details.map((issue) => ({
         message: issue.message,
       }));
       return res.status(400).json(list);
     }
+
+    // Check username & email
     const emailUser = await User.findOne({ email });
     const usernameUser = await User.findOne({ username });
+
     if (emailUser) {
-      return res.status(400).json({
-        message: "Email already exists",
-      });
+      return res.status(400).json({ message: "Email already exists" });
     }
     if (usernameUser) {
-      return res.status(400).json({
-        message: "Username already exists",
-      });
+      return res.status(400).json({ message: "Username already exists" });
     }
+
+    // Hash password
     const hashedPassword = await hash.hash(password, 10);
-    await User.create({ username, email, password: hashedPassword, role });
-    return res.status(201).json({ message: "User created successfully" });
+
+    // Các trường không bắt buộc -> nếu không có => null
+    const newUser = await User.create({
+      username,
+      email,
+      password: hashedPassword,
+      role: role || "admin", // hoặc bỏ vì schema đã default
+      avatar: req.body.avatar || null,
+      address: req.body.address || null,
+      phone: req.body.phone || null,
+      active: req.body.active ?? false, // nếu không truyền -> false
+    });
+
+    return res.status(201).json({
+      message: "User created successfully",
+      user: newUser,
+    });
   } catch (error) {
     return res.status(500).json({
       message: "Đăng Ký thất bại",
@@ -36,6 +52,7 @@ export const singup = async (req, res) => {
     });
   }
 };
+
 
 export const addUser = async (req, res) => {
   try {

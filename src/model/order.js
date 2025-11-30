@@ -44,7 +44,7 @@ const orderSchema = new mongoose.Schema(
 
     payment: {
       type: String,
-      enum: ["COD", "VNPAY", "MOMO"],
+      enum: ["COD", "VNPAY", "MOMO", "GG PAY", "ZALO PAY"],
       default: "COD",
     },
 
@@ -62,6 +62,11 @@ const orderSchema = new mongoose.Schema(
 
     note: {
       type: String,
+    },
+
+    isPaymentSucces: {
+      type: Boolean,
+      default: false,
     },
   },
   {
