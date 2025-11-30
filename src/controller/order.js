@@ -70,7 +70,7 @@ export const GetOrder = async (req, res) => {
 export const GetOrderByUser = async (req, res) => {
   try {
     const data = await Order.find({ userId: req.params.userid })
-      .populate("products.productId", "name price imageUrl");
+      .populate("products.productId", " imageUrl");
     return res.status(200).json(data);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -114,8 +114,8 @@ export const DetailOrder = async (req, res) => {
   try {
     const { id } = req.params;
     const data = await Order.findById(id)
-      .populate("products.productId", "name price imageUrl")
-      .populate("voucherId", "code discount type"); // <-- thêm dòng này
+      .populate("products.productId", " imageUrl")
+      .populate("voucherId", "code discount type"); 
 
     return res.status(200).json(data);
   } catch (error) {
