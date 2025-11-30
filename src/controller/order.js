@@ -46,7 +46,7 @@ export const GetOrder = async (req, res) => {
     // Lấy dữ liệu với filter và phân trang
     const [data, total] = await Promise.all([
       Order.find(filter)
-        .populate("products.productId", "name price imageUrl")
+        .populate("products.productId", "imageUrl")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(pageSize),
@@ -103,13 +103,16 @@ export const UpdateOrder = async (req, res) => {
 };
 export const DeleteOrder = async (req, res) => {
   try {
-    const { id } = req.params;
-    const data = await Order.findByIdAndDelete(id);
-    return res.status(200).json(data);
+    const data = await Order.deleteMany({});
+    return res.status(200).json({
+      message: "Đã xóa tất cả đơn hàng",
+      result: data,
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
+;
 export const DetailOrder = async (req, res) => {
   try {
     const { id } = req.params;
