@@ -53,10 +53,9 @@ export const singup = async (req, res) => {
   }
 };
 
-
 export const addUser = async (req, res) => {
   try {
-    const { username, email, password ,role} = req.body;
+    const { username, email, password, role } = req.body;
     const { error } = addUserSchma.validate(req.body, {
       abortEarly: false,
     });
@@ -129,13 +128,9 @@ export const signin = async (req, res) => {
       }
     );
 
-    const refreshToken = jwt.sign(
-      { id: user._id },
-      REFRESH_TOKEN_SECRET,
-      {
-        expiresIn: "7d",
-      }
-    );
+    const refreshToken = jwt.sign({ id: user._id }, REFRESH_TOKEN_SECRET, {
+      expiresIn: "7d",
+    });
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
@@ -155,7 +150,7 @@ export const signin = async (req, res) => {
 
     return res.status(200).json({
       user,
-      token:accessToken,
+      token: accessToken,
       message: "Đăng nhập thành công",
     });
   } catch (error) {
@@ -171,45 +166,39 @@ export const refreshTokenHandler = async (req, res) => {
       return res.status(401).json({ message: "Không có refresh token" });
     }
 
-    jwt.verify(
-      token,
-      REFRESH_TOKEN_SECRET,
-      async (err, decoded) => {
-        if (err) {
-          return res
-            .status(403)
-            .json({ message: "Refresh token không hợp lệ" });
-        }
-
-        const user = await User.findById(decoded.id);
-        if (!user) {
-          return res.status(404).json({ message: "Người dùng không tồn tại" });
-        }
-
-        const newAccessToken = jwt.sign(
-          {
-            id: user._id,
-            email: user.email,
-            role: user.role,
-          },
-         ACCESS_TOKEN_SECRET,
-          { expiresIn: "1d" }
-        );
-
-        res.cookie("accessToken", newAccessToken, {
-          httpOnly: true,
-          secure: true,
-          sameSite: "strict",
-          maxAge: 1 * 24 * 60 * 60 * 1000,
-          domain: "https://nextnode-mu.vercel.app",
-          path: "/",
-        });
-
-        return res.status(200).json({
-          message: "Làm mới token thành công",
-        });
+    jwt.verify(token, REFRESH_TOKEN_SECRET, async (err, decoded) => {
+      if (err) {
+        return res.status(403).json({ message: "Refresh token không hợp lệ" });
       }
-    );
+
+      const user = await User.findById(decoded.id);
+      if (!user) {
+        return res.status(404).json({ message: "Người dùng không tồn tại" });
+      }
+
+      const newAccessToken = jwt.sign(
+        {
+          id: user._id,
+          email: user.email,
+          role: user.role,
+        },
+        ACCESS_TOKEN_SECRET,
+        { expiresIn: "1d" }
+      );
+
+      res.cookie("accessToken", newAccessToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        maxAge: 1 * 24 * 60 * 60 * 1000,
+        domain: "https://nextnode-mu.vercel.app",
+        path: "/",
+      });
+
+      return res.status(200).json({
+        message: "Làm mới token thành công",
+      });
+    });
   } catch (error) {
     console.error("Refresh token error:", error);
     return res.status(500).json({ message: "Lỗi máy chủ" });
@@ -242,29 +231,37 @@ export const logout = async (req, res) => {
 
 export const GetUser = async (req, res) => {
   try {
-    // Lấy page, limit và search từ query params
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const search = req.query.search || "";
+    const search = req.query.search?.trim() || "";
 
-    // Tính toán số document cần bỏ qua
     const skip = (page - 1) * limit;
 
-    // Tạo query filter để tìm kiếm theo tên
-    const searchFilter = search
-      ? { username: { $regex: search, $options: "i" } }
-      : {};
 
-    // Lấy tổng số documents với filter
+    const baseFilter = {
+      role: { $nin: ["manage"] },
+    };
+
+    // Tìm kiếm theo username (nếu có)
+    const searchFilter = search
+      ? {
+          username: { $regex: search, $options: "i" },
+          ...baseFilter,
+        }
+      : baseFilter;
+
     const total = await User.countDocuments(searchFilter);
 
-    // Lấy data với phân trang và filter
-    const data = await User.find(searchFilter).skip(skip).limit(limit);
+    const data = await User.find(searchFilter)
+      .select("-password") // Ẩn mật khẩu (nên làm)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }); // Sắp xếp mới nhất trước (tùy chọn)
 
-    // Tính toán thông tin phân trang
     const totalPages = Math.ceil(total / limit);
 
     return res.status(200).json({
+      success: true,
       data,
       pagination: {
         currentPage: page,
@@ -276,7 +273,12 @@ export const GetUser = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    console.error("Error in GetUser:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+      error: error.message,
+    });
   }
 };
 export const updateUser = async (req, res) => {

@@ -106,26 +106,28 @@ export const getCommentStatsForAdmin = async (req, res) => {
 
 
 // Lấy chi tiết 1 comment theo id
-export const getCommentById = async (req, res) => {
+export const getCommentsByProductId = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // id này là productId
 
-    const comment = await Comment.findById(id)
+    const comments = await Comment.find({ productId: id })
       .populate("userId", "name email")
-      .populate("productId", "name price");
 
-    if (!comment) {
-      return res.status(404).json({ message: "Không tìm thấy comment" });
+    if (!comments || comments.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "Không có comment nào cho sản phẩm này" });
     }
 
-    return res.status(200).json(comment);
+    return res.status(200).json(comments);
   } catch (error) {
-    console.error("Error getCommentById:", error);
+    console.error("Error getCommentsByProductId:", error);
     return res
       .status(500)
       .json({ message: "Lỗi server", error: error.message });
   }
 };
+
 
 // Cập nhật comment
 export const updateComment = async (req, res) => {
