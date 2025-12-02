@@ -12,6 +12,25 @@ export const createComment = async (req, res) => {
       });
     }
 
+    // Nếu productId là 1 array → tạo nhiều comment
+    if (Array.isArray(productId)) {
+      const commentsToCreate = productId.map((id) => ({
+        userId,
+        productId: id,
+        content,
+        rating,
+        displayName,
+      }));
+
+      const savedComments = await Comment.insertMany(commentsToCreate);
+
+      return res.status(201).json({
+        message: "Đã tạo nhiều comment",
+        comments: savedComments,
+      });
+    }
+
+    // Nếu productId chỉ là 1 id → tạo 1 comment
     const comment = new Comment({
       userId,
       productId,
@@ -30,6 +49,7 @@ export const createComment = async (req, res) => {
       .json({ message: "Lỗi server", error: error.message });
   }
 };
+
 
 // Lấy tất cả comment (có thể filter theo productId, userId,rating)
 export const getComments = async (req, res) => {
