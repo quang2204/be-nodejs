@@ -50,7 +50,6 @@ export const createComment = async (req, res) => {
   }
 };
 
-
 // Lấy tất cả comment (có thể filter theo productId, userId,rating)
 export const getComments = async (req, res) => {
   try {
@@ -110,9 +109,8 @@ export const getCommentStatsForAdmin = async (req, res) => {
       return {
         productId: product._id,
         productName: product.name,
-        productImage: product.image,
+        productImage: product.imageUrl,
         description: product.description,
-        views: Number(avgRating.toFixed(1)), // làm tròn 1 số
         count: count,
       };
     });
@@ -124,14 +122,14 @@ export const getCommentStatsForAdmin = async (req, res) => {
   }
 };
 
-
 // Lấy chi tiết 1 comment theo id
 export const getCommentsByProductId = async (req, res) => {
   try {
-    const { id } = req.params; // id này là productId
+    const { id } = req.params;
 
     const comments = await Comment.find({ productId: id })
-      .populate("userId", "name email")
+      .populate("userId")
+      .populate("productId", "name imageUrl description");
 
     if (!comments || comments.length === 0) {
       return res
@@ -147,7 +145,6 @@ export const getCommentsByProductId = async (req, res) => {
       .json({ message: "Lỗi server", error: error.message });
   }
 };
-
 
 // Cập nhật comment
 export const updateComment = async (req, res) => {
@@ -211,4 +208,3 @@ export const getCommentsByProduct = async (req, res) => {
       .json({ message: "Lỗi server", error: error.message });
   }
 };
-
