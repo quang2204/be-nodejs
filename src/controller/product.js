@@ -1,13 +1,9 @@
+import { Order } from "../model/order";
 import { Product } from "../model/product";
 
 const GetAllProduct = async (req, res) => {
   try {
-    // lấy từ query, mặc định page=1, limit=10
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
 
-    // tính skip
-    const skip = (page - 1) * limit;
 
     // đếm tổng số sản phẩm
     const total = await Product.countDocuments();
@@ -15,8 +11,6 @@ const GetAllProduct = async (req, res) => {
     // lấy dữ liệu theo trang
     const data = await Product.find()
       .populate("caterori", "name")
-      .skip(skip)
-      .limit(limit)
       .sort({ createdAt: -1 }); // optional: sắp xếp mới nhất
 
     // nếu bạn muốn thêm field category_name:
@@ -28,12 +22,6 @@ const GetAllProduct = async (req, res) => {
 
     return res.status(200).json({
       data, // hoặc transformedData
-      pagination: {
-        total, // tổng số bản ghi
-        page, // trang hiện tại
-        limit, // số bản ghi / trang
-        totalPages: Math.ceil(total / limit),
-      },
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -123,25 +111,32 @@ const DeleteProduct = async (req, res) => {
   try {
     const productId = req.params.id;
 
-    // Kiểm tra xem product có trong đơn hàng nào không
+    // Kiểm tra xem sản phẩm có xuất hiện trong đơn hàng nào không
     const ordersWithProduct = await Order.countDocuments({
       "products.productId": productId,
     });
 
+    // Nếu sản phẩm có trong bất kỳ đơn hàng nào => không cho xoá
     if (ordersWithProduct > 0) {
       return res.status(400).json({
         success: false,
-        message: `Cannot delete product. It exists in ${ordersWithProduct} order(s)`,
-        suggestion: "Consider marking it as inactive instead",
+        message: `Không thể xóa sản phẩm vì đang tồn tại trong ${ordersWithProduct} đơn hàng`,
       });
     }
 
-    // Nếu không có trong đơn hàng nào, có thể xóa
-    await Product.findByIdAndDelete(productId);
+    // Nếu không có trong đơn hàng nào => cho phép xoá
+    const deletedProduct = await Product.findByIdAndDelete(productId);
+
+    if (!deletedProduct) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy sản phẩm để xóa",
+      });
+    }
 
     return res.status(200).json({
       success: true,
-      message: "Product deleted successfully",
+      message: "Xóa sản phẩm thành công",
     });
   } catch (error) {
     return res.status(500).json({
@@ -150,6 +145,7 @@ const DeleteProduct = async (req, res) => {
     });
   }
 };
+
 export {
   Pagination,
   GetProductDetails,

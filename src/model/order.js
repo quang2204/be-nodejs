@@ -71,6 +71,13 @@ const orderSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    cancelReason: {
+      type: String, // lý do khách muốn hủy
+    },
+    isCancelApproved: {
+      type: Boolean,
+      default: false, // admin chưa duyệt yêu cầu hủy
+    },
   },
   {
     timestamps: true,

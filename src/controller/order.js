@@ -1,18 +1,13 @@
 import { Order } from "../model/order";
-import { Product } from "../model/product";
 
 export const GetOrder = async (req, res) => {
   try {
     const {
-      page = 1,
-      limit = 10,
       search = "",
       status = "",
       payment = "",
     } = req.query;
 
-    const pageNumber = Number(page) || 1;
-    const pageSize = Number(limit) || 10;
 
     // Tạo query filter
     const filter = {};
@@ -41,24 +36,17 @@ export const GetOrder = async (req, res) => {
       filter.payment = payment;
     }
 
-    const skip = (pageNumber - 1) * pageSize;
 
     // Lấy dữ liệu với filter và phân trang
-    const [data, total] = await Promise.all([
+    const [data] = await Promise.all([
       Order.find(filter)
         .populate("products.productId", "imageUrl")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(pageSize),
+        .sort({ createdAt: -1 }),
       Order.countDocuments(filter),
     ]);
 
     return res.status(200).json({
       data,
-      current_page: pageNumber,
-      per_page: pageSize,
-      total,
-      total_pages: Math.ceil(total / pageSize),
     });
   } catch (error) {
     console.error("GetOrder error:", error);
