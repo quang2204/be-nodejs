@@ -11,6 +11,8 @@ import {
   refreshTokenHandler,
   logout,
   addUser,
+  forgotPassword,
+  resetPassword,
 } from "../controller/user-joi";
 const router = express.Router();
 router.post("/register", singup);
@@ -19,6 +21,8 @@ router.get("/user", GetUser);
 router.post("/logout", logout);
 router.post("/login", signin);
 router.post('/refresh-token', refreshTokenHandler);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:token", resetPassword);
 router.patch("/user/:id", updateUser);
 router.delete("/user/:id", DeleteUser);
 router.get("/user/:id", DetailUser);

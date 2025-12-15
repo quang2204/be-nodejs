@@ -2,6 +2,10 @@ import { User } from "../model/User";
 import hash from "bcryptjs";
 import { reqSchma, loginSchema, addUserSchma } from "../Schma/auth";
 import jwt from "jsonwebtoken";
+
+import crypto from "crypto";
+import nodemailer from "nodemailer";
+
 export const singup = async (req, res) => {
   try {
     const { username, email, password, role } = req.body;
@@ -237,7 +241,6 @@ export const GetUser = async (req, res) => {
 
     const skip = (page - 1) * limit;
 
-
     const baseFilter = {
       role: { $nin: ["manage"] },
     };
@@ -354,3 +357,88 @@ export const UpdatePassword = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    console.log(req.body);
+    if (!user) return res.status(404).json({ message: "Email không tồn tại" });
+
+    // Tạo token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    user.resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 phút
+
+    await user.save();
+
+    // Gửi mail
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "samtrung0809@gmail.com",
+        pass: "fxkv ohaj zqgy tnim",
+      },
+    });
+
+    await transporter.sendMail({
+      to: user.email,
+      subject: "Đặt lại mật khẩu",
+      html: `
+        <p>Bạn đã yêu cầu đặt lại mật khẩu</p>
+        <P>Mã xác nhận là ${resetToken}</P>
+        
+        <p>Link hết hạn sau 15 phút</p>
+      `,
+    });
+
+    res.json({ message: "Đã gửi email reset mật khẩu" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "Token không hợp lệ hoặc đã hết hạn" });
+    }
+
+    // ✅ HASH GIỐNG ĐĂNG KÝ
+    const hashedPassword = await hash.hash(password, 10);
+    user.password = hashedPassword;
+
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    // 🔥 BẮT BUỘC
+    await user.save();
+
+    res.json({ message: "Đổi mật khẩu thành công" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
