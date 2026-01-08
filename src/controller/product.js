@@ -84,15 +84,33 @@ const GetProductsCategory = async (req, res) => {
 };
 const AddProduct = async (req, res) => {
   try {
-    const data = await Product(req.body).save();
+    const { variants, quantity } = req.body;
+
+    let totalQuantity = quantity;
+
+    // Nếu có biến thể
+    if (variants && variants.length > 0) {
+      totalQuantity = variants.reduce((sum, item) => {
+        return sum + Number(item.quantity || 0);
+      }, 0);
+    }
+
+    const data = await Product({
+      ...req.body,
+      quantity: totalQuantity,
+    }).save();
+
     return res.status(201).json({
-      message: "Them thanh cong ",
+      message: "Thêm thành công",
       data,
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({
+      message: error.message,
+    });
   }
 };
+
 const UpdateProduct = async (req, res) => {
   try {
     const data = await Product.findByIdAndUpdate(req.params.id, req.body, {

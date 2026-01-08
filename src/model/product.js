@@ -15,6 +15,23 @@ const productSchma = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    variants: {
+      type: [
+        {
+          color: {
+            type: String,
+            required: true,
+          },
+          price: { type: Number }, 
+          quantity: { type: Number, required: true },
+          status: {
+            type: Boolean,
+            default: true,
+          },
+        },
+      ],
+      default: [],
+    },
     imageUrl: {
       type: String,
       required: true,
@@ -39,7 +56,7 @@ const productSchma = new mongoose.Schema(
     },
     quantity: {
       type: Number,
-      required: true,
+      required: false,
     },
   },
   {

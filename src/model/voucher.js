@@ -25,6 +25,11 @@ const voucherSchma = new mongoose.Schema({
     type: Date,
     required: true,
   },
+
+  maxPriceDis: {
+    type: Number,
+    required: true,
+  },
   isActive: {
     type: Boolean,
     required: true,

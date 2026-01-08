@@ -1,3 +1,4 @@
+import { Order } from "../model/order";
 import { Voucher } from "../model/voucher";
 
 export const CreateVoucher = async (req, res) => {
@@ -37,9 +38,24 @@ export const UpdateVoucher = async (req, res) => {
 };
 export const DeleteVoucher = async (req, res) => {
   try {
-    await Voucher.findByIdAndDelete(req.params.id);
+    const voucherId = req.params.id;
+
+    // Kiểm tra voucher đã được dùng trong order chưa
+    const orderExist = await Order.findOne({
+      voucherId: voucherId,
+    });
+
+    if (orderExist) {
+      return res.status(400).json({
+        message: "Voucher đã được sử dụng trong đơn hàng, không thể xóa",
+      });
+    }
+
+    // Chưa có order nào dùng → cho xóa
+    await Voucher.findByIdAndDelete(voucherId);
+
     return res.status(200).json({
-      message: "Xóa thành công",
+      message: "Xóa voucher thành công",
     });
   } catch (e) {
     return res.status(500).json({
