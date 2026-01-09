@@ -22,7 +22,7 @@ const productSchma = new mongoose.Schema(
             type: String,
             required: true,
           },
-          price: { type: Number }, 
+          price: { type: Number },
           quantity: { type: Number, required: true },
           status: {
             type: Boolean,
@@ -57,6 +57,15 @@ const productSchma = new mongoose.Schema(
     quantity: {
       type: Number,
       required: false,
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
+      required: true,
+    },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
     },
   },
   {

@@ -11,14 +11,9 @@ const GetAllProduct = async (req, res) => {
     // lấy dữ liệu theo trang
     const data = await Product.find()
       .populate("caterori", "name")
+      .populate("createdBy", "username")
+      .populate("createdBy", "username")
       .sort({ createdAt: -1 }); // optional: sắp xếp mới nhất
-
-    // nếu bạn muốn thêm field category_name:
-    // const transformedData = data.map((product) => ({
-    //   ...product.toObject(),
-    //   category_name: product.caterori?.name || null,
-    //   category_id: product.caterori?._id || null,
-    // }));
 
     return res.status(200).json({
       data, // hoặc transformedData
