@@ -53,7 +53,7 @@ const orderSchema = new mongoose.Schema(
 
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "users",
+      ref: "Users",
       required: true,
     },
 
@@ -74,11 +74,13 @@ const orderSchema = new mongoose.Schema(
       default: false,
     },
     cancelReason: {
-      type: String, // lý do khách muốn hủy
+      type: String,
     },
-    isCancelApproved: {
-      type: Boolean,
-      default: false, // admin chưa duyệt yêu cầu hủy
+    handledBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
+      default: null,
+      required: false,
     },
   },
   {

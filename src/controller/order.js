@@ -149,6 +149,7 @@ export const DetailOrder = async (req, res) => {
     const { id } = req.params;
     const data = await Order.findById(id)
       .populate("products.productId", " imageUrl")
+      .populate("handledBy", "username")
       .populate("voucherId", "code discount type"); 
 
     return res.status(200).json(data);

@@ -84,21 +84,31 @@ const GetProductsCategory = async (req, res) => {
 };
 const AddProduct = async (req, res) => {
   try {
-    const { variants, quantity } = req.body;
+    const { variants, quantity, price } = req.body;
 
-    let totalQuantity = quantity;
+    let totalQuantity = Number(quantity) || 0;
+    let averagePrice = Number(price) || 0;
 
     // Nếu có biến thể
     if (variants && variants.length > 0) {
+      // Tổng số lượng
       totalQuantity = variants.reduce((sum, item) => {
         return sum + Number(item.quantity || 0);
       }, 0);
+
+      // Giá trung bình
+      const totalPrice = variants.reduce((sum, item) => {
+        return sum + Number(item.price || 0);
+      }, 0);
+
+      averagePrice = totalPrice / variants.length;
     }
 
-    const data = await Product({
+    const data = await Product.create({
       ...req.body,
       quantity: totalQuantity,
-    }).save();
+      price: averagePrice,
+    });
 
     return res.status(201).json({
       message: "Thêm thành công",
@@ -110,6 +120,7 @@ const AddProduct = async (req, res) => {
     });
   }
 };
+
 
 const UpdateProduct = async (req, res) => {
   try {
