@@ -191,43 +191,42 @@ const DashboardStats = async (req, res) => {
     ]);
 
     // 3) top products (paid)
-    const topProductsPromise = Order.aggregate([
-      { $match: matchPaid },
-      { $unwind: "$products" },
-      {
-        $group: {
-          _id: "$products.productId",
-          qty: { $sum: "$products.quantity" },
-        },
+const topProductsPromise = Order.aggregate([
+  { $match: matchPaid },
+  { $unwind: "$products" },
+  {
+    $group: {
+      _id: {
+        productId: "$products.productId",
+        color: "$products.color",
       },
-      { $sort: { qty: -1 } },
-      { $limit: topLimit },
-      {
-        $lookup: {
-          from: "products",
-          localField: "_id",
-          foreignField: "_id",
-          as: "product",
-        },
-      },
-      { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          _id: 0,
-          productId: {
-            $cond: [
-              { $ifNull: ["$product._id", false] },
-              "$product._id",
-              "$_id",
-            ],
-          },
-          name: { $ifNull: ["$product.name", "Unknown product"] },
-          image: "$product.image",
-          price: "$product.price",
-          qty: 1,
-        },
-      },
-    ]);
+      qty: { $sum: "$products.quantity" },
+    },
+  },
+  { $sort: { qty: -1 } },
+  { $limit: topLimit },
+  {
+    $lookup: {
+      from: "products",
+      localField: "_id.productId",
+      foreignField: "_id",
+      as: "product",
+    },
+  },
+  { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
+  {
+    $project: {
+      _id: 0,
+      productId: "$_id.productId",
+      name: { $ifNull: ["$product.name", "Unknown product"] },
+      image: "$product.imageUrl", // ✅ ảnh theo productId
+      price: "$product.price",
+      color: "$_id.color",
+      qty: 1,
+    },
+  },
+]);
+
 
     // 4) recent orders
     const recentOrdersPromise = Order.find(matchAll)
@@ -236,7 +235,7 @@ const DashboardStats = async (req, res) => {
       .select(
         "madh customerName phone totalPrice status payment orderDate products userId"
       )
-      .populate("products.productId", "name image price");
+      .populate("products.productId", "name image price color");
 
     // await all promises
     const [

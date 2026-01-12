@@ -31,6 +31,7 @@ const orderSchema = new mongoose.Schema(
         priceBeforeDis: { type: Number, required: true },
         priceAfterDis: { type: Number, required: true },
         name: { type: String, required: true },
+        color: { type: String, required: true },
       },
     ],
 
