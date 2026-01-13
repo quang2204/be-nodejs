@@ -287,22 +287,30 @@ export const GetUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { username } = req.body;
+    const { username, phone } = req.body;
 
-    // Check if another user has the same username
-    const checkname = await User.findOne({ username });
-
-    // Check if the username belongs to a different user
-    if (checkname && checkname._id.toString() !== id) {
-      return res.status(400).json({
-        message: "Username already exists",
-      });
+    // Check username trùng
+    if (username) {
+      const checkUsername = await User.findOne({ username });
+      if (checkUsername && checkUsername._id.toString() !== id) {
+        return res.status(400).json({
+          message: "Username already exists",
+        });
+      }
     }
 
-    // Update the user if no conflict
-    await User.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
+    // ❌ Không cho cập nhật SDT nếu đã tồn tại
+    if (phone) {
+      const checkPhone = await User.findOne({ phone });
+      if (checkPhone && checkPhone._id.toString() !== id) {
+        return res.status(400).json({
+          message: "Phone number already exists",
+        });
+      }
+    }
+
+    // Update user
+    await User.findByIdAndUpdate(id, req.body, { new: true });
 
     return res.status(200).json({
       message: "Update success",
@@ -311,6 +319,7 @@ export const updateUser = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
 
 export const DeleteUser = async (req, res) => {
   try {
