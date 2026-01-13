@@ -191,42 +191,41 @@ const DashboardStats = async (req, res) => {
     ]);
 
     // 3) top products (paid)
-const topProductsPromise = Order.aggregate([
-  { $match: matchPaid },
-  { $unwind: "$products" },
-  {
-    $group: {
-      _id: {
-        productId: "$products.productId",
-        color: "$products.color",
+    const topProductsPromise = Order.aggregate([
+      { $match: matchPaid },
+      { $unwind: "$products" },
+      {
+        $group: {
+          _id: {
+            productId: "$products.productId",
+            color: "$products.color",
+          },
+          qty: { $sum: "$products.quantity" },
+        },
       },
-      qty: { $sum: "$products.quantity" },
-    },
-  },
-  { $sort: { qty: -1 } },
-  { $limit: topLimit },
-  {
-    $lookup: {
-      from: "products",
-      localField: "_id.productId",
-      foreignField: "_id",
-      as: "product",
-    },
-  },
-  { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
-  {
-    $project: {
-      _id: 0,
-      productId: "$_id.productId",
-      name: { $ifNull: ["$product.name", "Unknown product"] },
-      image: "$product.imageUrl", // ✅ ảnh theo productId
-      price: "$product.price",
-      color: "$_id.color",
-      qty: 1,
-    },
-  },
-]);
-
+      { $sort: { qty: -1 } },
+      { $limit: topLimit },
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id.productId",
+          foreignField: "_id",
+          as: "product",
+        },
+      },
+      { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 0,
+          productId: "$_id.productId",
+          name: { $ifNull: ["$product.name", "Unknown product"] },
+          image: "$product.imageUrl", // ✅ ảnh theo productId
+          price: "$product.price",
+          color: "$_id.color",
+          qty: 1,
+        },
+      },
+    ]);
 
     // 4) recent orders
     const recentOrdersPromise = Order.find(matchAll)

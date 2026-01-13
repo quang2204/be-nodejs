@@ -4,12 +4,7 @@ import { Product } from "../model/product";
 
 export const GetOrder = async (req, res) => {
   try {
-    const {
-      search = "",
-      status = "",
-      payment = "",
-    } = req.query;
-
+    const { search = "", status = "", payment = "" } = req.query;
 
     // Tạo query filter
     const filter = {};
@@ -38,7 +33,6 @@ export const GetOrder = async (req, res) => {
       filter.payment = payment;
     }
 
-
     // Lấy dữ liệu với filter và phân trang
     const [data] = await Promise.all([
       Order.find(filter)
@@ -56,11 +50,12 @@ export const GetOrder = async (req, res) => {
   }
 };
 
-
 export const GetOrderByUser = async (req, res) => {
   try {
-    const data = await Order.find({ userId: req.params.userid })
-      .populate("products.productId", " imageUrl");
+    const data = await Order.find({ userId: req.params.userid }).populate(
+      "products.productId",
+      " imageUrl"
+    );
     return res.status(200).json(data);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -72,43 +67,48 @@ export const AddOrder = async (req, res) => {
   session.startTransaction();
 
   try {
-    // 1. Xử lý voucherId = ""
     if (req.body.voucherId === "") {
       req.body.voucherId = null;
     }
 
     const { products } = req.body;
 
-    // 2. Kiểm tra tồn kho
+    // Tính totalPrice server-side
+    req.body.totalPrice = products.reduce((sum, item) => {
+      return sum + item.priceAfterDis * item.quantity;
+    }, 0);
+
     for (const item of products) {
-      const product = await Product.findById(item.productId).session(session);
-
-      if (!product) {
-        throw new Error("Sản phẩm không tồn tại");
-      }
-
-      if (product.quantity < item.quantity) {
-        throw new Error(`Sản phẩm ${product.name} không đủ số lượng`);
-      }
-    }
-
-    // 3. Lưu order
-    const order = new Order(req.body);
-    await order.save({ session });
-
-    // 4. Trừ kho
-    for (const item of products) {
-      await Product.findByIdAndUpdate(
-        item.productId,
-        { $inc: { quantity: -item.quantity } },
+      const result = await Product.updateOne(
+        {
+          _id: item.productId,
+          "variants.color": item.color,
+          "variants.quantity": { $gte: item.quantity },
+          "variants.status": true,
+          quantity: { $gte: item.quantity },
+        },
+        {
+          $inc: {
+            "variants.$.quantity": -item.quantity,
+            quantity: -item.quantity,
+          },
+        },
         { session }
       );
+
+      if (result.modifiedCount === 0) {
+        throw new Error(
+          `Sản phẩm ${item.name} - màu ${item.color} không đủ số lượng`
+        );
+      }
     }
+
+    const order = await Order.create([req.body], { session });
 
     await session.commitTransaction();
     session.endSession();
 
-    return res.status(201).json(order);
+    return res.status(201).json(order[0]);
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
@@ -118,6 +118,7 @@ export const AddOrder = async (req, res) => {
     });
   }
 };
+
 
 
 export const UpdateOrder = async (req, res) => {
@@ -143,14 +144,13 @@ export const DeleteOrder = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
-;
 export const DetailOrder = async (req, res) => {
   try {
     const { id } = req.params;
     const data = await Order.findById(id)
       .populate("products.productId", " imageUrl")
       .populate("handledBy", "username")
-      .populate("voucherId", "code discount type"); 
+      .populate("voucherId", "code discount type");
 
     return res.status(200).json(data);
   } catch (error) {

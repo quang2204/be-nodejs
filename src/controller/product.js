@@ -3,8 +3,6 @@ import { Product } from "../model/product";
 
 const GetAllProduct = async (req, res) => {
   try {
-
-
     // đếm tổng số sản phẩm
     const total = await Product.countDocuments();
 
@@ -82,7 +80,7 @@ const AddProduct = async (req, res) => {
     const { variants, quantity, price } = req.body;
 
     let totalQuantity = Number(quantity) || 0;
-    let averagePrice = Number(price) || 0;
+    let productPrice = Number(price) || 0;
 
     // Nếu có biến thể
     if (variants && variants.length > 0) {
@@ -91,18 +89,14 @@ const AddProduct = async (req, res) => {
         return sum + Number(item.quantity || 0);
       }, 0);
 
-      // Giá trung bình
-      const totalPrice = variants.reduce((sum, item) => {
-        return sum + Number(item.price || 0);
-      }, 0);
-
-      averagePrice = totalPrice / variants.length;
+      // Giá lấy từ biến thể đầu tiên
+      productPrice = Number(variants[0].price) || 0;
     }
 
     const data = await Product.create({
       ...req.body,
       quantity: totalQuantity,
-      price: averagePrice,
+      price: productPrice,
     });
 
     return res.status(201).json({
@@ -116,21 +110,54 @@ const AddProduct = async (req, res) => {
   }
 };
 
-
 const UpdateProduct = async (req, res) => {
   try {
-    const data = await Product.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    return res.status(201).json({
+    const { variants, quantity, price } = req.body;
+
+    let totalQuantity = Number(quantity) || 0;
+    let productPrice = Number(price) || 0;
+
+    // Nếu có biến thể
+    if (variants && variants.length > 0) {
+      // Tổng số lượng từ variants
+      totalQuantity = variants.reduce((sum, item) => {
+        return sum + Number(item.quantity || 0);
+      }, 0);
+
+      // Giá lấy từ biến thể đầu tiên
+      productPrice = Number(variants[0].price) || 0;
+    }
+
+    const data = await Product.findByIdAndUpdate(
+      req.params.id,
+      {
+        ...req.body,
+        quantity: totalQuantity,
+        price: productPrice,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!data) {
+      return res.status(404).json({
+        message: "Product not found",
+      });
+    }
+
+    return res.status(200).json({
       message: "Update success",
       data,
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({
+      message: error.message,
+    });
   }
 };
+
 const DeleteProduct = async (req, res) => {
   try {
     const productId = req.params.id;
