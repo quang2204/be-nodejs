@@ -67,42 +67,59 @@ export const AddOrder = async (req, res) => {
   session.startTransaction();
 
   try {
+    // Normalize voucherId
     if (req.body.voucherId === "") {
       req.body.voucherId = null;
     }
 
     const { products } = req.body;
 
-    // Tính totalPrice server-side
+    // ✅ Tính totalPrice server-side
     req.body.totalPrice = products.reduce((sum, item) => {
       return sum + item.priceAfterDis * item.quantity;
     }, 0);
 
+    // ✅ Xử lý từng sản phẩm trong đơn
     for (const item of products) {
-      const result = await Product.updateOne(
+      // 1️⃣ Trừ quantity của variant
+      const updateVariant = await Product.updateOne(
         {
           _id: item.productId,
           "variants.color": item.color,
           "variants.quantity": { $gte: item.quantity },
           "variants.status": true,
-          quantity: { $gte: item.quantity },
         },
         {
           $inc: {
             "variants.$.quantity": -item.quantity,
-            quantity: -item.quantity,
           },
         },
         { session }
       );
 
-      if (result.modifiedCount === 0) {
+      if (updateVariant.modifiedCount === 0) {
         throw new Error(
           `Sản phẩm ${item.name} - màu ${item.color} không đủ số lượng`
         );
       }
+
+      // 2️⃣ Lấy lại product sau khi trừ variant
+      const product = await Product.findById(item.productId).session(session);
+
+      // 3️⃣ Tính lại quantity tổng = tổng quantity các variants
+      const totalQuantity = product.variants.reduce((sum, v) => {
+        return sum + v.quantity;
+      }, 0);
+
+      // 4️⃣ Update quantity tổng
+      await Product.updateOne(
+        { _id: item.productId },
+        { quantity: totalQuantity },
+        { session }
+      );
     }
 
+    // ✅ Tạo order
     const order = await Order.create([req.body], { session });
 
     await session.commitTransaction();
@@ -118,8 +135,6 @@ export const AddOrder = async (req, res) => {
     });
   }
 };
-
-
 
 export const UpdateOrder = async (req, res) => {
   try {
