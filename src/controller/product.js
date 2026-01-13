@@ -10,7 +10,7 @@ const GetAllProduct = async (req, res) => {
     const data = await Product.find()
       .populate("caterori", "name")
       .populate("createdBy", "username")
-      .populate("createdBy", "username")
+      .populate("updatedBy", "username")
       .sort({ createdAt: -1 }); // optional: sắp xếp mới nhất
 
     return res.status(200).json({
