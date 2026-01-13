@@ -67,34 +67,44 @@ export const AddOrder = async (req, res) => {
   session.startTransaction();
 
   try {
-    // Normalize voucherId
+    // 1️⃣ Normalize voucherId
     if (req.body.voucherId === "") {
       req.body.voucherId = null;
     }
 
     const { products } = req.body;
 
-    // ✅ Tính totalPrice server-side
-    req.body.totalPrice = products.reduce((sum, item) => {
+    if (!products || products.length === 0) {
+      throw new Error("Danh sách sản phẩm không hợp lệ");
+    }
+
+    // 2️⃣ Tính totalPrice server-side
+    const totalPrice = products.reduce((sum, item) => {
       return sum + item.priceAfterDis * item.quantity;
     }, 0);
 
-    // ✅ Xử lý từng sản phẩm trong đơn
+    req.body.totalPrice = totalPrice;
+
+    // 3️⃣ Xử lý từng sản phẩm
     for (const item of products) {
-      // 1️⃣ Trừ quantity của variant
+      // 3.1️⃣ Trừ đúng variant bằng arrayFilters
       const updateVariant = await Product.updateOne(
-        {
-          _id: item.productId,
-          "variants.color": item.color,
-          "variants.quantity": { $gte: item.quantity },
-          "variants.status": true,
-        },
+        { _id: item.productId },
         {
           $inc: {
-            "variants.$.quantity": -item.quantity,
+            "variants.$[v].quantity": -item.quantity,
           },
         },
-        { session }
+        {
+          arrayFilters: [
+            {
+              "v.color": item.color,
+              "v.quantity": { $gte: item.quantity },
+              "v.status": true,
+            },
+          ],
+          session,
+        }
       );
 
       if (updateVariant.modifiedCount === 0) {
@@ -103,15 +113,20 @@ export const AddOrder = async (req, res) => {
         );
       }
 
-      // 2️⃣ Lấy lại product sau khi trừ variant
+      // 3.2️⃣ Lấy lại product sau khi trừ variant
       const product = await Product.findById(item.productId).session(session);
 
-      // 3️⃣ Tính lại quantity tổng = tổng quantity các variants
-      const totalQuantity = product.variants.reduce((sum, v) => {
-        return sum + v.quantity;
-      }, 0);
+      if (!product) {
+        throw new Error("Không tìm thấy sản phẩm");
+      }
 
-      // 4️⃣ Update quantity tổng
+      // 3.3️⃣ Tính lại quantity tổng
+      const totalQuantity = product.variants.reduce(
+        (sum, v) => sum + v.quantity,
+        0
+      );
+
+      // 3.4️⃣ Update quantity tổng
       await Product.updateOne(
         { _id: item.productId },
         { quantity: totalQuantity },
@@ -119,13 +134,14 @@ export const AddOrder = async (req, res) => {
       );
     }
 
-    // ✅ Tạo order
-    const order = await Order.create([req.body], { session });
+    // 4️⃣ Tạo order
+    const [order] = await Order.create([req.body], { session });
 
+    // 5️⃣ Commit transaction
     await session.commitTransaction();
     session.endSession();
 
-    return res.status(201).json(order[0]);
+    return res.status(201).json(order);
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
@@ -137,17 +153,80 @@ export const AddOrder = async (req, res) => {
 };
 
 export const UpdateOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { id } = req.params;
-    const data = await Order.findByIdAndUpdate(id, req.body, {
+    const newStatus = req.body.status;
+
+    // 1️⃣ Lấy order cũ
+    const oldOrder = await Order.findById(id).session(session);
+
+    if (!oldOrder) {
+      throw new Error("Không tìm thấy đơn hàng");
+    }
+
+    // 2️⃣ Nếu chuyển sang HỦY → hoàn kho
+    if (newStatus === "Hủy" && oldOrder.status !== "Hủy") {
+      for (const item of oldOrder.products) {
+        // 2.1️⃣ Hoàn lại quantity cho đúng variant
+        await Product.updateOne(
+          { _id: item.productId },
+          {
+            $inc: {
+              "variants.$[v].quantity": item.quantity,
+            },
+          },
+          {
+            arrayFilters: [
+              {
+                "v.color": item.color,
+                "v.status": true,
+              },
+            ],
+            session,
+          }
+        );
+
+        // 2.2️⃣ Lấy lại product để tính quantity tổng
+        const product = await Product.findById(item.productId).session(session);
+
+        if (!product) continue;
+
+        const totalQuantity = product.variants.reduce(
+          (sum, v) => sum + v.quantity,
+          0
+        );
+
+        // 2.3️⃣ Update quantity tổng
+        await Product.updateOne(
+          { _id: item.productId },
+          { quantity: totalQuantity },
+          { session }
+        );
+      }
+    }
+
+    // 3️⃣ Update order
+    const updatedOrder = await Order.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true,
+      session,
     });
-    return res.status(200).json(data);
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(200).json(updatedOrder);
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    await session.abortTransaction();
+    session.endSession();
+
+    return res.status(400).json({ message: error.message });
   }
 };
+
 export const DeleteOrder = async (req, res) => {
   try {
     const data = await Order.deleteMany({});
