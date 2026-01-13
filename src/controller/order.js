@@ -77,22 +77,17 @@ export const AddOrder = async (req, res) => {
       throw new Error("Danh sách sản phẩm không hợp lệ");
     }
 
-    // 1️⃣ Tính totalPrice
     req.body.totalPrice = products.reduce(
       (sum, item) => sum + item.priceAfterDis * item.quantity,
       0
     );
 
-    // 2️⃣ Xử lý từng sản phẩm
     for (const item of products) {
-      // 🔥 LẤY PRODUCT TRƯỚC
+      // 1️⃣ Lấy product
       const product = await Product.findById(item.productId).session(session);
+      if (!product) throw new Error("Không tìm thấy sản phẩm");
 
-      if (!product) {
-        throw new Error("Không tìm thấy sản phẩm");
-      }
-
-      // 🔥 TÌM ĐÚNG VARIANT
+      // 2️⃣ Tìm đúng variant
       const variant = product.variants.find(
         (v) => v.color === item.color && v.status === true
       );
@@ -101,21 +96,14 @@ export const AddOrder = async (req, res) => {
         throw new Error(`Không tìm thấy biến thể ${item.name} - ${item.color}`);
       }
 
-      // ❌ HẾT HÀNG
-      if (variant.quantity <= 0) {
-        throw new Error(
-          `Sản phẩm ${item.name} - màu ${item.color} đã hết hàng`
-        );
-      }
-
-      // ❌ KHÔNG ĐỦ SỐ LƯỢNG
-      if (variant.quantity - item.quantity <= 0) {
+      // 3️⃣ Check tồn kho (CHUẨN)
+      if (variant.quantity < item.quantity) {
         throw new Error(
           `Sản phẩm ${item.name} - màu ${item.color} không đủ số lượng`
         );
       }
 
-      // 3️⃣ TRỪ KHO (lúc này chắc chắn an toàn)
+      // 4️⃣ Trừ kho
       await Product.updateOne(
         {
           _id: item.productId,
@@ -129,12 +117,11 @@ export const AddOrder = async (req, res) => {
         { session }
       );
 
-      // 4️⃣ CẬP NHẬT quantity tổng
-      variant.quantity -= item.quantity;
-
+      // 5️⃣ Update quantity tổng
       const totalQuantity = product.variants.reduce(
         (sum, v) =>
-          sum + (v._id.equals(variant._id) ? variant.quantity : v.quantity),
+          sum +
+          (v._id.equals(variant._id) ? v.quantity - item.quantity : v.quantity),
         0
       );
 
@@ -145,7 +132,6 @@ export const AddOrder = async (req, res) => {
       );
     }
 
-    // 5️⃣ Tạo order
     const [order] = await Order.create([req.body], { session });
 
     await session.commitTransaction();
@@ -155,11 +141,9 @@ export const AddOrder = async (req, res) => {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-
     return res.status(400).json({ message: error.message });
   }
 };
-
 
 
 export const UpdateOrder = async (req, res) => {
